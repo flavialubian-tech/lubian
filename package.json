@@ -1,0 +1,35 @@
+{
+  "name": "lubian-gestao",
+  "version": "1.0.0",
+  "description": "Sistema de gestão da Lubian Limpezas",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "orcamento": "tsx scripts/gerar-orcamento.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/flavialubian-tech/lubian.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/flavialubian-tech/lubian/issues"
+  },
+  "homepage": "https://github.com/flavialubian-tech/lubian#readme",
+  "dependencies": {
+    "handlebars": "^4.7.9",
+    "playwright-core": "^1.63.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.3"
+  },
+  "private": true,
+  "type": "module"
+}

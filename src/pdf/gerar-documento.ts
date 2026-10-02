@@ -1,0 +1,48 @@
+import { readFile } from 'node:fs/promises';
+import { extname, join } from 'node:path';
+import Handlebars from 'handlebars';
+import { chromium } from 'playwright-core';
+
+const RAIZ = join(import.meta.dirname, '..', '..');
+const PASTA_TEMPLATES = join(RAIZ, 'templates');
+
+const hb = Handlebars.create();
+const formatoMoeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+// Intl usa espaço não separável depois de "R$"; trocamos por espaço comum como nos modelos.
+hb.registerHelper('moeda', (v: number) => formatoMoeda.format(v).replace(/ /g, ' '));
+hb.registerHelper('inc', (i: number) => i + 1);
+hb.registerHelper('maiusculas', (s: string) => (s ?? '').toLocaleUpperCase('pt-BR'));
+
+export type ModeloDocumento = 'orcamento-tecnico';
+
+const TIPOS_IMAGEM: Record<string, string> = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', svg: 'image/svg+xml', webp: 'image/webp' };
+
+/** Logo salvo no repositório (ex.: "assets/logo.png") vai embutido no PDF, sem depender da internet. */
+async function embutirLogo(logoUrl: string | undefined): Promise<string | undefined> {
+  if (!logoUrl || /^(https?:|data:)/.test(logoUrl)) return logoUrl;
+  const tipo = TIPOS_IMAGEM[extname(logoUrl).slice(1).toLowerCase()] ?? 'application/octet-stream';
+  return `data:${tipo};base64,${(await readFile(join(RAIZ, logoUrl))).toString('base64')}`;
+}
+
+export async function renderizarHtml(
+  modelo: ModeloDocumento,
+  dados: { empresa?: { logoUrl?: string } } & Record<string, unknown>,
+): Promise<string> {
+  const fonte = await readFile(join(PASTA_TEMPLATES, `${modelo}.html`), 'utf8');
+  const empresa = dados.empresa && { ...dados.empresa, logoUrl: await embutirLogo(dados.empresa.logoUrl) };
+  return hb.compile(fonte)({ ...dados, empresa });
+}
+
+export async function gerarPdf(html: string): Promise<Buffer> {
+  const browser = await chromium.launch({
+    executablePath: process.env.CHROMIUM_PATH || undefined,
+  });
+  try {
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: 'networkidle' });
+    // As margens ficam no @media print do próprio modelo.
+    return await page.pdf({ format: 'A4', printBackground: true, margin: { top: '0', bottom: '0', left: '0', right: '0' } });
+  } finally {
+    await browser.close();
+  }
+}

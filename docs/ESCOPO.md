@@ -93,6 +93,9 @@ O orçamento **não** é m² × preço. Ele nasce da vistoria e usa a fórmula d
 5. ANCORAGEM (D2) — escolhida em cada orçamento, sem multiplicador fixo:
      a) digita o VALOR DE TABELA (média de mercado) → Desconto = Tabela − Valor Final
      b) ou digita o DESCONTO DE PARCERIA CORPORATIVA (ex.: R$ 500 / R$ 600) → Tabela = Valor Final + Desconto
+     c) ou digita o DESCONTO EM % (ex.: "Desconto Especial 15%") → Tabela = Valor Final ÷ (1 − %)
+6. ESCOPO ITEMIZADO: o Valor de Tabela é distribuído entre os itens do escopo técnico
+   (por peso, em múltiplos de R$ 5), e a soma dos itens fecha exatamente com a Tabela.
 ```
 
 **Exemplo real (planilha Lubian):** custo operacional R$ 1.465,00 × 1,35 = **R$ 1.977,00**
