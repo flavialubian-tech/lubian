@@ -6,8 +6,9 @@ Leia antes: `AGENTS.md`, `docs/ESCOPO.md` §3.5, §3.8 (integração de pagament
 (pagamento → cobrança `paga` → recibo PDF), `src/lib/arquivos.ts`, `src/lib/url.ts`, a rota pública `/p/[token]`.
 
 ## ⚠️ Decisão pendente (Flávia): onde hospedar — **custo zero por enquanto**
-Restrição: sem caixa para investir agora. Tudo nesta fase precisa caber em **planos gratuitos**; o pago fica
-para quando houver receita (seção "Quando houver caixa", no fim).
+Restrição: sem caixa para investir agora. **Começar pelo modo local (Parte L)**, sem nenhum serviço online.
+Quando precisar do link do cliente e da equipe na rua, ir para a nuvem em **planos gratuitos** (abaixo); o pago
+fica para quando houver receita (seção "Quando houver caixa", no fim).
 A geração dos PDFs abre um **Chromium** (`src/pdf/gerar-documento.ts`) e precisa de ~1 GB de memória, o que
 descarta funções serverless pequenas. **Recomendação: Google Cloud Run** (contêiner que "desliga" quando ninguém usa).
 
@@ -21,6 +22,50 @@ descarta funções serverless pequenas. **Recomendação: Google Cloud Run** (co
 
 Qualquer contêiner serve: a especificação abaixo não depende da escolha (só o passo "criar o serviço" muda).
 Se ficar com o **Render Free**, gerar os PDFs um de cada vez (fila simples em memória) e medir o pico de memória.
+
+## Parte L — Modo local: rodar no computador da Lubian, sem nada online (opção zero)
+O sistema **já roda inteiro no computador**: banco PGlite em `.data/pglite`, fotos e comprovantes em
+`.data/arquivos`, PDFs com o Chrome/Edge instalado. Não precisa de Supabase, hospedagem, domínio nem cartão.
+Internet só é necessária **uma vez**, na instalação (Node.js e `npm install`); depois funciona desconectado.
+
+### O que muda no dia a dia
+| Funciona igual | Muda |
+|---|---|
+| Orçamentos, PDFs, agenda, financeiro, recibos, faturas, relatórios | Só funciona com **o computador ligado** e o sistema aberto |
+| Pix com QR Code e copia-e-cola (Parte A0, gerado localmente) | **Link do cliente** (`/p/[token]`) não abre fora da casa/escritório → enviar o **PDF pelo WhatsApp** e marcar **Aprovado manualmente** (botão já existe) |
+| Celulares da equipe e da Bruna **no mesmo Wi-Fi** abrem pelo endereço local (ex.: `http://192.168.0.10:3000`) | Fora do Wi-Fi (equipe na obra) ninguém acessa → "Minha semana" vira **PDF/print da escala** enviado pelo WhatsApp |
+| — | Asaas (baixa automática) **não funciona** — o aviso de pagamento precisa chegar pela internet. Baixa manual |
+| — | Se o computador estragar ou for roubado, perde tudo **sem backup** → backup é obrigatório |
+
+### O que implementar
+- **Iniciar com dois cliques**: `iniciar-lubian.bat` (Windows) e `iniciar-lubian.command` (Mac), na raiz:
+  roda `npm run build` só se o código mudou, depois `npm start -- -H 0.0.0.0 -p 3000` e abre o navegador.
+  Opcional: atalho na pasta "Inicializar" do Windows para subir junto com o computador.
+- **Chromium**: usar o navegador já instalado — `CHROMIUM_PATH` padrão detectado
+  (`C:\Program Files\Google\Chrome\Application\chrome.exe`, Edge em `C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe`,
+  `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`); se nenhum existir, mensagem clara na tela.
+- **Endereço para os celulares**: tela `/minha-conta` (Gestão) mostra o endereço na rede local (IP do computador
+  + porta) com QR Code para abrir no celular. `APP_URL` fica sem definir (o sistema usa o endereço de quem acessou).
+  Dica no `docs/OPERACAO.md`: fixar o IP do computador no roteador (reserva DHCP) para o endereço não mudar.
+- **Firewall**: na 1ª vez o Windows pergunta se libera o Node.js na rede — marcar **rede privada**.
+- **Backup local** — `npm run backup` (e automático ao iniciar, 1×/dia):
+  exporta o banco com `PGlite.dumpDataDir()` (sem precisar parar o sistema) + copia `.data/arquivos`,
+  compacta em `lubian-AAAA-MM-DD.zip` dentro de `BACKUP_DIR` (pendrive/HD externo, ou a pasta do Google Drive
+  para computador, se quiser uma cópia fora de casa). Mantém 30 diários + 12 mensais. `npm run restaurar <arquivo>`
+  volta um backup (testar uma vez).
+  Aviso no painel quando o último backup tiver mais de 3 dias.
+- **Segurança**: só o computador tem os dados → senha no Windows/Mac, trocar as senhas iniciais dos usuários.
+  O sistema não fica exposto à internet (só à rede do Wi-Fi).
+- Sem `ASAAS_ATIVO`, a Parte A fica desligada; o webhook nem é usado.
+
+### Passar para online depois (sem perder nada)
+Quando houver caixa ou precisar do link do cliente/equipe na rua: criar o Supabase, `pg_dump` do PGlite →
+importar no Supabase (`scripts/migrar-para-nuvem.ts`), copiar `.data/arquivos` para o Storage
+(`scripts/migrar-arquivos.ts`) e seguir a Parte B. Os dados são os mesmos; só muda onde ficam.
+
+### Pronto quando (Parte L)
+Num computador sem internet: abrir pelo atalho, criar orçamento, gerar PDF, registrar pagamento com recibo;
+abrir o sistema no celular pelo Wi-Fi; `npm run backup` gera o zip e `npm run restaurar` volta ele num banco vazio.
 
 ## Parte A0 — Pix com QR Code sem custo (sem Asaas)
 O Asaas **não cobra mensalidade**, mas cobra tarifa por cobrança paga com QR Code dinâmico (a isenção das
