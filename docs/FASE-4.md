@@ -5,20 +5,36 @@ Leia antes: `AGENTS.md`, `docs/ESCOPO.md` §3.5, §3.8 (integração de pagament
 `registrarSinal` / `sincronizarAlocacoes` (`src/lib/operacao.ts`), o fluxo **Registrar pagamento** da Fase 3
 (pagamento → cobrança `paga` → recibo PDF), `src/lib/arquivos.ts`, `src/lib/url.ts`, a rota pública `/p/[token]`.
 
-## ⚠️ Decisão pendente (Flávia): onde hospedar
-O §5 do escopo previa Vercel, mas a geração dos PDFs abre um **Chromium** (`src/pdf/gerar-documento.ts`), que não
-cabe bem em função serverless (tamanho do pacote, tempo de partida, memória). **Recomendação: contêiner**.
+## ⚠️ Decisão pendente (Flávia): onde hospedar — **custo zero por enquanto**
+Restrição: sem caixa para investir agora. Tudo nesta fase precisa caber em **planos gratuitos**; o pago fica
+para quando houver receita (seção "Quando houver caixa", no fim).
+A geração dos PDFs abre um **Chromium** (`src/pdf/gerar-documento.ts`) e precisa de ~1 GB de memória, o que
+descarta funções serverless pequenas. **Recomendação: Google Cloud Run** (contêiner que "desliga" quando ninguém usa).
 
-| Opção | Prós | Contras |
+| Opção (grátis) | Prós | Contras |
 |---|---|---|
-| **Railway** (recomendado) | Mais simples: conecta o GitHub, lê o `Dockerfile`, domínio e HTTPS em minutos; cobra pelo uso | Sem plano gratuito permanente (~US$ 5–10/mês neste porte) |
-| **Fly.io** | Servidor em São Paulo (`gru`), barato, volume persistente | Configuração por linha de comando (`fly.toml`), um pouco mais técnica |
-| **Render** | Painel simples, deploy pelo GitHub | Plano gratuito "dorme" (1ª abertura lenta e webhook do Asaas pode falhar); usar o pago |
-| Vercel | Já conhecida, gratuita | Chromium exige `@sparticuz/chromium` + limites de função; não recomendado |
+| **Google Cloud Run** (recomendado) | Cota grátis mensal (2 milhões de acessos, 180 mil vCPU-s, 360 mil GiB-s) sobra para a Lubian; aceita 1 GB de memória (Chromium cabe); desliga sozinho sem uso e liga em poucos segundos | Pede cartão para abrir a conta de cobrança — configurar **alerta de orçamento de R$ 5** e **máximo de 1 instância** para não haver surpresa; conferir na página de preços se a região escolhida está na cota grátis |
+| **Render (plano Free)** | Mais simples de todos, **não pede cartão**, deploy pelo GitHub | Só 512 MB de memória e 0,1 CPU (Next + Chromium podem estourar — testar o PDF antes); "dorme" após 15 min sem uso e leva ~1 min para acordar |
+| **Oracle Cloud (Always Free)** | Servidor de verdade, ligado o tempo todo, muita memória, grátis sem prazo | Bem mais técnico (instalar Docker e HTTPS na mão); pede cartão para verificação |
+| ~~Vercel Hobby~~ | — | Plano grátis **proíbe uso comercial**, e o Chromium não cabe |
+| ~~Railway / Fly.io~~ | — | Não têm mais plano gratuito permanente |
 
 Qualquer contêiner serve: a especificação abaixo não depende da escolha (só o passo "criar o serviço" muda).
+Se ficar com o **Render Free**, gerar os PDFs um de cada vez (fila simples em memória) e medir o pico de memória.
 
-## Parte A — Pix automático pelo Asaas
+## Parte A0 — Pix com QR Code sem custo (sem Asaas)
+O Asaas **não cobra mensalidade**, mas cobra tarifa por cobrança paga com QR Code dinâmico (a isenção das
+100 primeiras do mês vale só para Pix por chave ou QR estático). Para começar sem gasto:
+- `src/lib/pix.ts` (função pura + testes): monta o **Pix copia-e-cola estático** (BR Code, padrão EMV do Banco
+  Central) a partir de `empresas.chavePix` (CNPJ), nome e cidade da empresa, **valor** da cobrança e um
+  identificador (`txid` = número da cobrança, ex.: `REC20260012`), com o CRC16 no fim. QR Code gerado a partir
+  dele (pacote `qrcode`, PNG/SVG).
+- Aparece nos mesmos lugares da Parte A (link do cliente, PDFs, mensagem de WhatsApp). O cliente não digita
+  valor nem chave — menos erro.
+- A **baixa continua manual** (Bruna confere no extrato e clica em **Registrar pagamento**, Fase 3).
+- É o comportamento quando `ASAAS_ATIVO` está desligado.
+
+## Parte A — Pix automático pelo Asaas (quando compensar a tarifa)
 
 ### Banco
 - `empresas`: `asaasAmbiente` (`sandbox | producao`, padrão `sandbox`). Chave da API **não** vai no banco:
@@ -53,14 +69,14 @@ Qualquer contêiner serve: a especificação abaixo não depende da escolha (só
 - **Saldo / 100%**: ao marcar **Serviço entregue** (`marcarEntregue`).
 - **Fatura mensal**: ao gerar a fatura, sobre o valor da Opção 1 (Pix com desconto de antecipação).
 - Botão **Gerar Pix** manual em qualquer cobrança aberta sem `asaasId` (ou com Pix expirado → gera de novo).
-- Interruptor `ASAAS_ATIVO=1`: sem ele, nada chama o Asaas e o sistema segue como na Fase 3 (chave Pix CNPJ fixa).
+- Interruptor `ASAAS_ATIVO=1`: sem ele, nada chama o Asaas e o sistema usa o Pix estático da Parte A0.
 
 ### Onde o cliente vê o Pix
 - **Link do cliente** `/p/[token]`: depois da aprovação, card "Pague o sinal" com QR Code, botão
   **Copiar código Pix**, valor e vencimento; quando pago, troca por "Sinal recebido ✓" e o **recibo para baixar**.
   Mesma coisa para o saldo e para as faturas (link público da fatura da Fase 3).
 - **PDFs**: fatura mensal e orçamento aprovado ganham bloco com QR + copia-e-cola (quando houver);
-  sem Pix gerado, mantêm a chave CNPJ como hoje.
+  sem Pix do Asaas, usam o Pix estático da Parte A0.
 - **WhatsApp** (`src/lib/mensagens.ts`): nova mensagem "cobrança" com valor, vencimento, link do cliente e o
   copia-e-cola no fim (é o que o cliente cola no app do banco).
 
@@ -93,7 +109,7 @@ Qualquer contêiner serve: a especificação abaixo não depende da escolha (só
   pelo WhatsApp da Bruna (API oficial é Fase 5). Marcar como lembrado grava `cobrancas.lembradoEm`.
 
 ### Pronto quando (Parte A)
-`npm test`, `npm run typecheck` e `next build` passam; `scripts/teste-e2e.ts`, com `ASAAS_*` do **sandbox**:
+`npm test` (inclui o BR Code da Parte A0 conferido contra um copia-e-cola gerado pelo app do banco), `npm run typecheck` e `next build` passam; `scripts/teste-e2e.ts`, com `ASAAS_*` do **sandbox**:
 aprovar orçamento no link → aparece o QR do sinal → simular o pagamento (confirmar o Pix pelo painel do
 sandbox, ou, sem rede, disparar o webhook com o corpo gravado em `exemplos/asaas-payment-received.json`) → cobrança paga, agenda confirmada, recibo disponível no link.
 Teste do webhook repetido (mesmo `id` 2×) gera um só pagamento.
@@ -101,6 +117,8 @@ Teste do webhook repetido (mesmo `id` 2×) gera um só pagamento.
 ## Parte B — Colocar no ar
 
 ### Banco: Supabase (PostgreSQL)
+- Plano **Free** (500 MB de banco, 1 GB de arquivos, 2 projetos). Projeto grátis **pausa após 1 semana sem uso**
+  — com uso diário não acontece; se pausar, reativa pelo painel sem perder dados.
 - Criar projeto na região **São Paulo** (`sa-east-1`). `DATABASE_URL` = string do **pooler em modo sessão**
   (porta 5432) para o app em contêiner; `db.ts` já usa `prepare: false`, então o modo transação (6543) também serve.
 - Rodar `npm run db:migrar` com a `DATABASE_URL` de produção (passo do deploy, antes de subir a nova versão) e
@@ -114,6 +132,7 @@ Teste do webhook repetido (mesmo `id` 2×) gera um só pagamento.
   `empresaId/uuid.ext`), escolhida por `ARQUIVOS_DRIVER=supabase` (`disco` continua padrão no dev).
   Usa `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` (só no servidor). As rotas `/api/fotos`, `/api/comprovantes`
   e os recibos continuam servindo pelo app (checando sessão/token), sem URL pública do bucket.
+- Para caber em 1 GB: reduzir fotos ao enviar (lado maior 1600 px, JPEG ~80%) antes de gravar.
 - Script `scripts/migrar-arquivos.ts`: copia `.data/arquivos` para o bucket (se já houver dados locais).
 
 ### Contêiner com Chromium
@@ -126,20 +145,23 @@ Teste do webhook repetido (mesmo `id` 2×) gera um só pagamento.
 - Antes de publicar: conferir que um orçamento, um recibo e uma fatura saem em PDF **dentro do contêiner**
   (`docker run` local + `npm run teste:e2e` apontando para ele).
 
-### Domínio e HTTPS
-- Subdomínio `gestao.lubian.com.br` (ou o domínio que a Flávia tiver): registro **CNAME** no provedor do domínio
-  apontando para o endereço que a plataforma der; HTTPS automático da plataforma.
-- `APP_URL=https://gestao.lubian.com.br` (os links enviados ao cliente usam ela).
+### Endereço e HTTPS
+- **Agora (grátis):** usar o endereço que a plataforma dá (ex.: `lubian-gestao-xxxx.run.app` ou
+  `lubian-gestao.onrender.com`), já com HTTPS. `APP_URL` = esse endereço (os links enviados ao cliente usam ela).
+- **Depois (≈ R$ 40/ano no registro.br):** domínio próprio, ex.: `gestao.lubian.com.br`, com registro **CNAME**
+  apontando para a plataforma; trocar `APP_URL` (links antigos param de funcionar — avisar clientes com cobrança aberta).
 - Cookie de sessão `Secure` em produção (conferir `src/lib/auth.ts`).
-- No painel do Asaas (produção): webhook `https://gestao.lubian.com.br/api/webhooks/asaas`, versão v3,
-  eventos de cobrança, token = `ASAAS_WEBHOOK_TOKEN`, fila ativa.
+- Asaas (quando ligado): webhook `<APP_URL>/api/webhooks/asaas`, versão v3, eventos de cobrança,
+  token = `ASAAS_WEBHOOK_TOKEN`, fila ativa. Com plataforma que "dorme", o 1º aviso pode demorar a ser aceito;
+  o Asaas reenvia e a idempotência evita duplicar.
 
-### Backup
-- Supabase faz backup diário no plano pago (Pro, ~US$ 25/mês); no gratuito **não** há restauração garantida.
-- Independente do plano: `scripts/backup.ts` (ou job agendado da plataforma / GitHub Actions diário às 3h)
-  roda `pg_dump` da `DATABASE_URL`, compacta e guarda num bucket separado (`backups`, privado),
-  mantendo **30 diários + 12 mensais**. Os arquivos do Storage entram no backup semanal.
-- Documentar e **testar uma restauração** num banco vazio antes de considerar pronto (`docs/OPERACAO.md`).
+### Backup (grátis)
+- O plano Free do Supabase **não tem backup**. Fazer o nosso, pelo **GitHub Actions** (grátis no repositório):
+  `.github/workflows/backup.yml` diário às 3h roda `pg_dump` da `DATABASE_URL` (segredo do repositório),
+  compacta, **criptografa** com `BACKUP_SENHA` (gpg) e guarda como artefato do Actions com retenção de 90 dias.
+- Uma vez por mês a Flávia baixa o último backup para o computador/Google Drive (passo no `docs/OPERACAO.md`).
+- Arquivos do Storage: cópia semanal pelo mesmo workflow (script `scripts/backup-arquivos.ts`).
+- Documentar e **testar uma restauração** num banco vazio (PGlite local serve) antes de considerar pronto.
 
 ### Variáveis de ambiente (acrescentar à tabela do README)
 | Variável | Uso |
@@ -150,16 +172,24 @@ Teste do webhook repetido (mesmo `id` 2×) gera um só pagamento.
 | `ASAAS_WEBHOOK_TOKEN` | Token conferido no webhook (gerar aleatório, ≥ 32 caracteres) |
 | `ARQUIVOS_DRIVER` | `disco` (padrão) ou `supabase` |
 | `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` | Storage (só servidor) |
+| `BACKUP_SENHA` | Senha da criptografia do backup (segredo do GitHub, guardar também fora do sistema) |
 | `CHROMIUM_SEM_SANDBOX` | `1` se o Chromium do contêiner exigir `--no-sandbox` |
 
 ### Ordem de entrada no ar
-1. Supabase criado, migrações e semente aplicadas; Storage com o bucket.
-2. Contêiner publicado na plataforma escolhida com `ASAAS_ATIVO` **desligado**; domínio e HTTPS funcionando.
-3. Flávia e Bruna usam uma semana com o Pix manual (Fase 3) em produção.
-4. Asaas: conta aprovada (CNPJ 44.883.814/0001-97), chave de produção, webhook cadastrado → `ASAAS_ATIVO=1`.
-5. 1ª cobrança real de valor baixo (R$ 1) paga pela própria Flávia para ver a baixa, o recibo e a agenda.
+1. Supabase Free criado, migrações e semente aplicadas; Storage com o bucket.
+2. Contêiner publicado na plataforma escolhida (com alerta de orçamento, se pedir cartão), `ASAAS_ATIVO`
+   **desligado**, Pix estático (A0) funcionando; backup diário rodando.
+3. Flávia e Bruna usam em produção com baixa manual.
+4. Quando o volume de cobranças justificar a tarifa: conta Asaas (CNPJ 44.883.814/0001-97), chave de produção,
+   webhook → `ASAAS_ATIVO=1`; 1ª cobrança real de R$ 1 paga pela própria Flávia para ver baixa, recibo e agenda.
 
 ### Pronto quando (Parte B)
-Sistema aberto em `https://<domínio>` com login; PDF de orçamento, recibo e fatura gerados em produção;
-foto de vistoria enviada e reaberta (Storage); backup do dia presente no bucket e uma restauração testada;
+Sistema aberto no endereço da plataforma com login; PDF de orçamento, recibo e fatura gerados em produção;
+foto de vistoria enviada e reaberta (Storage); backup do dia presente no GitHub Actions e uma restauração testada;
 `docs/ESCOPO.md` §5 atualizado com a hospedagem escolhida e o README com as novas variáveis.
+
+### Quando houver caixa (não fazer agora)
+- Supabase **Pro** (~US$ 25/mês): backup diário gerenciado, sem pausa.
+- Domínio próprio (~R$ 40/ano).
+- Asaas ligado (tarifa por Pix recebido — conferir a tabela da conta).
+- Hospedagem paga sem "dormir" (Railway/Render pago) se o Cloud Run/Render Free ficar lento.
