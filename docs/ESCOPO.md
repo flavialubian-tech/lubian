@@ -1,7 +1,7 @@
-# Lubian Gestão — Documento de Escopo (v0.1)
+# Lubian Gestão — Documento de Escopo (v1.0)
 
 > Sistema de gestão (SaaS) para a **Lubian Limpezas** — Engenharia de Limpeza Pós-Obra.
-> Status: **rascunho para aprovação**. Nenhum código foi escrito ainda.
+> Status: **decisões D1–D8 fechadas** — escopo pronto para iniciar a Fase 1.
 
 ---
 
@@ -30,7 +30,7 @@ sua própria marca, sem retrabalho.
 | Perfil | Quem | Acesso | Dispositivo principal |
 |---|---|---|---|
 | **Gestão** (admin) | Flávia | Tudo: custos, margens, lucro, configurações | Celular (vistorias) + PC |
-| **Administrativo** | Bruna | Clientes, orçamentos, agenda, financeiro, WhatsApp. *(Ver custos/margem? — decisão D5)* | Computador |
+| **Administrativo** | Bruna | Clientes, orçamentos, agenda, financeiro, WhatsApp, **com visão de custos e markup** (D5) | Computador |
 | **Líder de equipe** | Anderson | Somente leitura: escala e agenda da semana, endereço da obra, checklist | Celular |
 | **Auxiliar** | Leandro, Nicoly… | Somente a própria escala/agenda | Celular |
 | **Cliente** (sem login) | Arquitetos, construtoras, PF | Link seguro: ver/aprovar orçamento, baixar fatura e recibos, ver Pix | Celular |
@@ -56,7 +56,7 @@ sua própria marca, sem retrabalho.
 
 **Equipe**
 - Nome, função (Líder / Auxiliar), telefone, **cor na agenda**
-- **Diária padrão** (ex.: Flávia R$ 250; Anderson/Leandro/Nicoly R$ 180–230)
+- **Diária padrão** (faixa atual R$ 125 a R$ 250 — ex.: Flávia R$ 250)
 - A diária pode ser **sobrescrita por projeto** (o valor do orçamento prevalece)
 - Habilitações (ex.: NR-35 para trabalho em altura) — o sistema avisa se escalar alguém sem NR-35 em serviço de fachada
 
@@ -82,41 +82,41 @@ cria o lead + agendamento da vistoria.
 
 ### 3.4 Orçamento Técnico (motor de precificação)
 
-O orçamento **não** é m² × preço. Ele nasce da vistoria e usa a fórmula de custos:
+O orçamento **não** é m² × preço. Ele nasce da vistoria e usa a fórmula de custos com
+**markup sobre o custo** (D1):
 
 ```
-1. FORÇA-TAREFA    = Σ (diária de cada profissional × dias dele na obra)
+1. FORÇA-TAREFA     = Σ (diária de cada profissional no projeto × dias dele na obra)
 2. CUSTOS VARIÁVEIS = Uber/Transporte + Alimentação/Marmitas + Produtos/Fretes + Locação (andaimes…)
-3. CUSTO TOTAL     = Força-Tarefa + Custos Variáveis
-4. VALOR FINAL     = Custo Total aplicado o Markup Estratégico (35% a 45%)   ← ver decisão D1
-5. VALOR DE TABELA = Valor Final × fator de ancoragem (padrão 1,25; configurável)
-6. DESCONTO DE PARCERIA = Valor de Tabela − Valor Final
+3. CUSTO OPERACIONAL TOTAL = Força-Tarefa + Custos Variáveis
+4. VALOR FINAL      = Custo Operacional Total × (1 + Markup)     Markup escolhido: 30% a 45%
+5. ANCORAGEM (D2) — escolhida em cada orçamento, sem multiplicador fixo:
+     a) digita o VALOR DE TABELA (média de mercado) → Desconto = Tabela − Valor Final
+     b) ou digita o DESCONTO DE PARCERIA CORPORATIVA (ex.: R$ 500 / R$ 600) → Tabela = Valor Final + Desconto
 ```
 
-**Exemplo** — 2 dias, Flávia (250) + Leandro (200) + Nicoly (180), variáveis R$ 300, markup 40%:
+**Exemplo real (planilha Lubian):** custo operacional R$ 1.465,00 × 1,35 = **R$ 1.977,00**
+(valor final; o sistema permite arredondar). Com Desconto de Parceria de R$ 500,00:
 
 | Linha | Valor |
 |---|---|
-| Força-Tarefa: (250 + 200 + 180) × 2 | R$ 1.260,00 |
-| Custos variáveis | R$ 300,00 |
-| **Custo total** | **R$ 1.560,00** |
-| Valor final (markup 40%: × 1,40) | R$ 2.184,00 |
-| Valor de tabela (× 1,25, arredondado) | R$ 2.730,00 |
-| Desconto de Parceria | − R$ 546,00 |
-| **Cliente paga** | **R$ 2.184,00** |
-| Sinal 50% / Quitação 50% | R$ 1.092,00 / R$ 1.092,00 |
+| Valor de Tabela | R$ 2.477,00 |
+| Desconto de Parceria Corporativa | − R$ 500,00 |
+| **Valor Final ao cliente** | **R$ 1.977,00** |
+| Sinal 50% (reserva de agenda) / Quitação 50% | R$ 988,50 / R$ 988,50 |
 
 Regras:
-- **Trava de segurança:** o sistema **não deixa** salvar/enviar um valor abaixo do
-  Custo Total + markup mínimo (35%). Só a Flávia pode liberar exceção, com justificativa.
-- Tela interna mostra custos e margem; **o PDF do cliente mostra só** Valor de Tabela →
-  Desconto de Parceria → Valor Final, escopo técnico, condições e validade.
-- Validade do orçamento configurável (padrão sugerido: 7 dias).
+- O sistema mostra sempre o **markup efetivo** (Valor Final ÷ Custo − 1).
+- **Trava de segurança:** não deixa enviar orçamento com markup efetivo **abaixo de 30%**.
+  Só a Flávia pode liberar exceção, com justificativa registrada.
+- Tela interna (Flávia e Bruna) mostra custos e markup; **o PDF do cliente mostra só**
+  Valor de Tabela → Desconto de Parceria → Valor Final, escopo técnico, condições e validade.
+- **Validade padrão: 7 dias** (D6).
 - Versões: se o orçamento for revisado, guarda o histórico (v1, v2…).
 
 **Funil:** Rascunho → Enviado → Aprovado → Recusado (com motivo) · Expirado
-- **Alertas de follow-up** para a Bruna: ex.: 2 dias e 5 dias após envio sem resposta,
-  e 1 dia antes de expirar. Painel "Orçamentos para cobrar hoje".
+- **Alertas de follow-up** para a Bruna: **2 e 5 dias** após envio sem resposta (D6),
+  e aviso de expiração no 7º dia. Painel "Orçamentos para cobrar hoje".
 
 ### 3.5 Link do cliente (sem login)
 - Link único e seguro enviado pelo WhatsApp
@@ -126,7 +126,10 @@ Regras:
 ### 3.6 Agenda e Escala
 - Visões dia / semana / mês, **cores por profissional ou equipe**
 - Serviço de **vários dias** (contínuos ou dias escolhidos, ex.: qui + sex)
-- Ao aprovar: os dias ficam **pré-reservados**; ao **pagar o sinal**, viram **confirmados** (ver decisão D3)
+- **Regra de ouro (D3):** aprovação do cliente = **PRÉ-RESERVA** (cor tracejada na agenda).
+  A força-tarefa só fica **CONFIRMADA** após a baixa do **Pix de 50% de sinal**
+  (manual pela Bruna com comprovante, ou automática pelo gateway).
+- Pré-reserva sem sinal gera alerta para a Bruna e pode ser liberada para outra obra
 - Alerta de **conflito**: profissional já escalado em outra obra no mesmo dia
 - Bloqueios: folgas, feriados, indisponibilidade
 - Visão da equipe (líderes/auxiliares): "Minha semana" com endereço (abre no Maps) e horário
@@ -147,10 +150,12 @@ Regras:
 - Alertas de vencimento e atraso
 - Formas: **Pix (principal)**, dinheiro, cartão, transferência, boleto
 
-**Integração de pagamento (gateway)**
+**Integração de pagamento (gateway — D7)**
+- **Hoje (manual):** Bruna envia a chave Pix CNPJ 44.883.814/0001-97 e confere o comprovante;
+  o sistema já terá o botão "Dar baixa" com anexo do comprovante (Fase 3)
 - Gera **Pix copia-e-cola / QR Code** no PDF e no link do cliente
 - **Baixa automática** quando o cliente paga → confirma agenda → gera o recibo automaticamente
-- Sugestão: **Asaas** (Pix, boleto, cartão, webhook de baixa e emissão de **NFS-e** na mesma
+- Escolhido: **Asaas** (Pix, boleto, cartão, webhook de baixa e emissão de **NFS-e** na mesma
   plataforma — resolve também o item de nota fiscal no futuro)
 
 **Contratos recorrentes / mensais**
@@ -161,9 +166,11 @@ Regras:
 - Lançadas **por obra** (Uber, marmitas, produtos, frete, andaime) e gerais da empresa
 - Comparação **Previsto (orçamento) × Realizado** por obra
 
-**Acerto da equipe**
-- Semanal ou mensal (por profissional)
-- Soma diárias trabalhadas (pelo valor do projeto) − faltas ± vales/adiantamentos
+**Acerto da equipe (D4) — por diária/produção em cada obra**
+- Conta os **dias efetivamente trabalhados** por profissional (registro de presença na obra)
+- Soma o valor individual de cada diária naquele projeto (R$ 125 a R$ 250)
+- **Desconta adiantamentos/vales** lançados no período
+- Período de fechamento livre (por obra, semana ou mês)
 - Gera extrato/recibo de pagamento para cada profissional
 
 ### 3.9 Documentos PDF (com os modelos HTML da Lubian)
@@ -201,7 +208,7 @@ Numeração sequencial automática (ORC-2026-0001, REC-…, FAT-…).
 
 | Fase | Entrega | Resultado para o negócio |
 |---|---|---|
-| **1 — Núcleo comercial** | Login/perfis, cadastros (clientes, obras, equipe, serviços), vistoria básica com fotos, motor de orçamento + trava de margem, **PDF do Orçamento**, link de aprovação, funil + follow-up, botão WhatsApp | Bruna e Flávia já orçam e vendem pelo sistema |
+| **1 — Núcleo comercial** | Login/perfis, cadastros (clientes, obras, equipe, serviços), vistoria básica com fotos, motor de orçamento (markup) + trava de markup mínimo 30%, **PDF do Orçamento**, link de aprovação, funil + follow-up, botão WhatsApp | Bruna e Flávia já orçam e vendem pelo sistema |
 | **2 — Agenda e operação** | Agenda com cores, multi-dias, conflitos, visão da equipe, pré-reserva/confirmação, checklist handover + fotos, presença | Escala organizada, equipe vê a semana no celular |
 | **3 — Financeiro** | Contas a receber, Recibos de Sinal/Quitação, Faturas mensais, despesas por obra, acerto da equipe, relatórios de lucro e ranking | Controle de "não pagar para trabalhar" |
 | **4 — Automação** | Integração Asaas (Pix QR + baixa automática), lembretes automáticos | Bruna para de conferir extrato manualmente |
@@ -221,21 +228,15 @@ Numeração sequencial automática (ORC-2026-0001, REC-…, FAT-…).
 
 ---
 
-## 6. Decisões pendentes (preciso da sua resposta)
+## 6. Decisões registradas
 
-- **D1 — Markup ou Margem?** São contas diferentes. Com custo de R$ 3.000:
-  - *Markup 40%* (custo × 1,40) → cliente paga **R$ 4.200** → lucro R$ 1.200 = 28,6% do preço
-  - *Margem 40%* (custo ÷ 0,60) → cliente paga **R$ 5.000** → lucro R$ 2.000 = 40% do preço
-  Qual das duas é a "fórmula sagrada"? E o relatório "margem dos 40% respeitada" mede qual?
-- **D2 — Fator de ancoragem** do Valor de Tabela: fixo (ex.: 1,25) ou a Bruna/Flávia escolhe
-  por orçamento (1,20 a 1,30)? Arredondar para centena/dezena?
-- **D3 — Agenda:** aprovação = pré-reserva e **sinal pago = confirmação** (libera a vaga se
-  o sinal não vier em X dias)? Ou a aprovação já confirma?
-- **D4 — Acerto da equipe:** semanal ou mensal? Existem vales/adiantamentos a descontar?
-- **D5 — Bruna** pode ver custos, diárias da equipe e margem, ou só o valor final?
-- **D6 — Prazos de follow-up** e validade do orçamento (sugestão: lembretes em 2 e 5 dias,
-  validade 7 dias).
-- **D7 — Gateway:** podemos seguir com **Asaas**, ou já têm conta em outro (Mercado Pago,
-  Inter, Sicredi/Cresol…)? Alguma taxa de cartão é repassada ao cliente?
-- **D8 — Modelos HTML:** quando aprovar este escopo, envie os 4 modelos (Orçamento, Fatura,
-  Recibo de Sinal, Recibo de Quitação) e, se tiver, o do Checklist.
+| # | Tema | Decisão |
+|---|---|---|
+| D1 | Cálculo | **Markup sobre o custo operacional total**, de 30% a 45% |
+| D2 | Ancoragem | Valor de Tabela **ou** Desconto de Parceria digitado em cada orçamento (sem fator fixo) |
+| D3 | Agenda | Aprovação = pré-reserva; **sinal de 50% pago = agenda confirmada** |
+| D4 | Equipe | Acerto por diária/produção por obra, dias efetivos, com desconto de vales |
+| D5 | Permissões | Bruna vê custos e markup |
+| D6 | Funil | Validade 7 dias; follow-up em 2 e 5 dias |
+| D7 | Pagamento | Manual (Pix CNPJ) na Fase 3; **Asaas** com baixa automática na Fase 4 |
+| D8 | Documentos | Modelos HTML enviados para `templates/` (começando pelo Orçamento Técnico "Padrão Luva Branca") |
