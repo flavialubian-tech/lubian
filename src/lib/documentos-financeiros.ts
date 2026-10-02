@@ -7,6 +7,7 @@ import { db, schema } from '@/db';
 import { referenciaMes } from '@/fatura';
 import { dataPorExtenso, montarRecibo, type Pagamento } from '@/recibo';
 import { gerarPdf, renderizarHtml } from '@/pdf/gerar-documento';
+import { pdfPeloNavegador, respostaPaginaParaSalvar } from '@/pdf/modo';
 import { ErroNegocio } from './erros';
 import { proximoNumero } from './numeracao';
 import { FORMAS_PAGAMENTO } from './operacao';
@@ -132,7 +133,9 @@ export async function dadosFatura(faturaId: string) {
 /** Resposta HTTP com o PDF (inline, ou anexo com `baixar`). */
 export async function respostaPdf(doc: { nomeArquivo: string; dados: Record<string, unknown> } | null, modelo: 'recibo' | 'fatura-mensal', baixar = false) {
   if (!doc) return new Response('Não encontrado', { status: 404 });
-  const pdf = await gerarPdf(await renderizarHtml(modelo, doc.dados as never));
+  const html = await renderizarHtml(modelo, doc.dados as never);
+  if (pdfPeloNavegador()) return respostaPaginaParaSalvar(html, doc.nomeArquivo);
+  const pdf = await gerarPdf(html);
   return new Response(new Uint8Array(pdf), {
     headers: {
       'Content-Type': 'application/pdf',

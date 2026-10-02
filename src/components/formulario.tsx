@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useActionState, useEffect, type ReactNode } from 'react';
 
-export type EstadoForm = { erro?: string; ok?: string; link?: { href: string; rotulo: string; baixar?: boolean } } | undefined;
+export type EstadoForm = { erro?: string; ok?: string; link?: { href: string; rotulo: string; baixar?: boolean; pagina?: boolean } } | undefined;
 
 /** Formulário ligado a uma Server Action que devolve { erro } ou { ok } (e um link, ex.: o recibo em PDF). */
 export function Formulario({
@@ -19,9 +19,11 @@ export function Formulario({
   const router = useRouter();
   const link = estado?.link;
   // Documento gerado (recibo): começa o download e só então atualiza a tela (a ação não revalida,
-  // senão o formulário sumiria antes do download).
+  // senão o formulário sumiria antes do download). Com `pagina` (PDF feito pelo navegador) não há o que
+  // baixar: só atualiza, e o recibo fica no link da lista.
   useEffect(() => {
     if (!link?.baixar) return;
+    if (link.pagina) return router.refresh();
     const a = document.createElement('a');
     a.href = link.href;
     a.download = '';

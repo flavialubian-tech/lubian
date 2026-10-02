@@ -16,6 +16,7 @@ import {
   salvarOrcamento,
   type SalvarOrcamentoInput,
 } from '@/lib/orcamentos';
+import { pdfPeloNavegador } from '@/pdf/modo';
 
 const ctx = (s: { empresaId: string; usuarioId: string }) => ({ empresaId: s.empresaId, usuarioId: s.usuarioId });
 
@@ -81,7 +82,7 @@ export async function registrarSinalAcao(id: string, _: EstadoForm, f: FormData)
   return executarAcao(async () => {
     // Sem revalidatePath: o formulário baixa o recibo e depois atualiza a tela (router.refresh).
     const pagamentoId = await registrarSinal(ctx(sessao), id, await lerPagamento(sessao.empresaId, f));
-    return { ok: 'Sinal registrado: agenda confirmada.', link: { href: `/api/recibos/${pagamentoId}?baixar=1`, rotulo: 'Baixar recibo do sinal (PDF)', baixar: true } };
+    return { ok: 'Sinal registrado: agenda confirmada.', link: { href: `/api/recibos/${pagamentoId}?baixar=1`, rotulo: 'Baixar recibo do sinal (PDF)', baixar: true, pagina: pdfPeloNavegador() } };
   });
 }
 
