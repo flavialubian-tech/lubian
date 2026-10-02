@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Fatura Katiane – Outubro 2026</title>
+  <style>
+  :root{ --azul:#1e3a8a; --amarelo:#facc15; --preto:#0f172a; --bg:#ffffff; --borda:#e5e7eb; --verde:#16a34a; --azul-claro:#eff6ff; }
+  *{box-sizing:border-box}
+  html,body{ margin:0; background:var(--bg); color:var(--preto); font:400 12pt/1.5 "Inter",sans-serif; }
+  .sheet{ max-width:800px; margin:20px auto; padding:30px; background:#fff; border:1px solid var(--borda); border-radius:8px; }
+
+  .layout-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+  .layout-table td { vertical-align: top; }
+
+  .logo{ width:80px; height:80px; object-fit:contain; }
+  .brand h1{ margin:0; color:var(--azul); font-size:18pt; font-weight:800; }
+  .brand p{ margin:0; color:#475569; font-size:10pt; }
+
+  .header-right{ text-align:right; }
+  .header-right h2{ margin:0; color:var(--azul); font-size:24pt; font-weight:900; letter-spacing:1px; }
+  .header-right p{ margin:0; color:#64748b; font-weight:700; font-size:12pt; }
+
+  .info-box h3{ margin:0 0 5px; font-size:11pt; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; }
+  .info-box p{ margin:2px 0; font-size:11.5pt; }
+
+  table.items{ width:100%; border-collapse:collapse; margin-bottom:25px; }
+  table.items th{ background:var(--azul-claro); color:var(--azul); text-align:left; padding:10px; border-bottom:2px solid var(--azul); font-size:11pt; text-transform:uppercase; }
+  table.items td{ padding:12px 10px; border-bottom:1px solid var(--borda); font-size:11.5pt; }
+
+  .pay-card{ border:1px solid var(--borda); border-radius:8px; padding:16px; background:#fafafa; height: 100%; display: flex; flex-direction: column; box-sizing: border-box;}
+  .pay-card h4{ margin: 8px 0 12px; color:var(--azul); font-size:13pt; border-bottom:1px dashed #cbd5e1; padding-bottom:8px; }
+  
+  table.pay-table { width: 100%; border-collapse: collapse; font-size: 10.5pt; color: #475569; margin-top: auto;}
+  table.pay-table td { padding: 4px 0; }
+  table.pay-table td.right { text-align: right; white-space: nowrap; width: 30%; }
+  table.pay-table td:first-child { width: 70%; padding-right: 10px; }
+  table.pay-table tr.total td { padding-top: 12px; border-top: 2px solid var(--borda); font-size: 14pt; font-weight: 800; color: var(--azul); white-space: nowrap; }
+
+  .badge{ display:inline-block; background:var(--verde); color:#fff; font-size:9.5pt; font-weight:700; padding:4px 10px; border-radius:20px; margin-bottom: 4px; align-self: flex-start;}
+
+  .note-box{ border:1px solid #bfdbfe; background:var(--azul-claro); padding:20px; border-radius:8px; margin-bottom:25px; }
+  .note-box p{ margin:0 0 15px; color:var(--azul); font-weight:600; }
+  .calendar{ width:100%; border-collapse:collapse; text-align:center; background:#fff; }
+  .calendar th{ background:#dbeafe; color:var(--azul); padding:8px; border:1px solid #bfdbfe; font-size:11pt; }
+  .calendar td{ padding:10px; border:1px solid #bfdbfe; font-size:11.5pt; font-weight:600; color:#334155; }
+
+  footer{ text-align:center; padding-top:20px; border-top:1px solid var(--borda); font-size:10pt; color:#64748b; }
+  footer span{ display:block; color:var(--azul); font-weight:700; margin-top:4px; }
+  </style>
+</head>
+<body>
+  <div class="sheet">
+    <table class="layout-table" style="border-bottom:2px solid #1e3a8a; padding-bottom:15px; margin-bottom:20px;">
+      <tr>
+        <td style="width: 100px;">
+          <img class="logo" src="https://th.bing.com/th/id/OIP.3tJDl7ONGDf6u_QjE6rCIQAAAA?w=194&h=194&c=7&r=0&o=7&pid=1.7&rm=3" alt="Logo Lubian"/>
+        </td>
+        <td>
+          <div class="brand">
+            <h1>Lubian Limpezas</h1>
+            <p>Rua Gelcemina Maria Oro, 109 - Chapecó/SC<br>(49) 98890-7454</p>
+          </div>
+        </td>
+        <td style="text-align: right; vertical-align: middle;">
+          <div class="header-right">
+            <h2>FATURA</h2>
+            <p>#5306</p>
+          </div>
+        </td>
+      </tr>
+    </table>
+
+    <table class="layout-table">
+      <tr>
+        <td style="width: 50%;">
+          <div class="info-box">
+            <h3>Faturado Para:</h3>
+            <p><strong>Katiane Laura Balzan</strong></p>
+            <p>Rua Uruguai - Centro<br>Chapecó / SC</p>
+          </div>
+        </td>
+        <td style="width: 50%;">
+          <div class="info-box">
+            <h3>Detalhes da Fatura:</h3>
+            <p>Data de Emissão: 29/09/2026</p>
+            <p>Vencimento: <strong>06/10/2026</strong></p>
+          </div>
+        </td>
+      </tr>
+    </table>
+
+    <table class="items">
+      <thead>
+        <tr>
+          <th>Descrição do Serviço</th>
+          <th style="text-align:right;">Quantidade</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Diárias programadas para Outubro/2026</td>
+          <td style="text-align:right;">13 diárias</td>
+        </tr>
+        <tr>
+          <td style="color: #dc2626;">Desconto: Abatimento de falta da equipe</td>
+          <td style="text-align:right; color: #dc2626;">- 1 diária</td>
+        </tr>
+        <tr>
+          <td style="font-weight:700; color:var(--azul);">Total a Faturar neste mês:</td>
+          <td style="text-align:right; font-weight:700;">12 Diárias</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <table class="layout-table" style="height: 100%;">
+      <tr>
+        <td style="width: 48%; padding-right: 2%; height: 100%;">
+          <div class="pay-card">
+            <div class="badge">Mais Vantajoso</div>
+            <h4>Opção 1: PIX / Transf.</h4>
+            <table class="pay-table">
+              <tr>
+                <td>Valor Base (12 x R$ 180,00)</td>
+                <td class="right">R$ 2.160,00</td>
+              </tr>
+              <tr>
+                <td>Desconto Antecipação (10%)</td>
+                <td class="right">- R$ 216,00</td>
+              </tr>
+              <tr class="total">
+                <td>Total</td>
+                <td class="right">R$ 1.944,00</td>
+              </tr>
+            </table>
+          </div>
+        </td>
+        <td style="width: 48%; padding-left: 2%; height: 100%;">
+          <div class="pay-card">
+            <div class="badge" style="background:#1e3a8a;">Pagamento à vista</div>
+            <h4>Opção 2: Dinheiro (Espécie)</h4>
+            <table class="pay-table">
+              <tr>
+                <td>Diária Especial Reduzida</td>
+                <td class="right">R$ 160,00</td>
+              </tr>
+              <tr>
+                <td>Cálculo Base (12 x R$ 160,00)</td>
+                <td class="right">R$ 1.920,00</td>
+              </tr>
+              <tr class="total">
+                <td>Total</td>
+                <td class="right">R$ 1.920,00</td>
+              </tr>
+            </table>
+          </div>
+        </td>
+      </tr>
+    </table>
+
+    <div class="note-box">
+      <p>Querida Katiane,<br>Confira abaixo os dias da semana programados para os atendimentos deste mês. Tudo organizado para manter o seu espaço impecável!</p>
+      <table class="calendar">
+        <thead>
+          <tr>
+            <th>Segundas:</th>
+            <th>Quartas:</th>
+            <th>Sextas:</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>05, 12, 19, 26</td>
+            <td>07, 14, 21, 28</td>
+            <td>02, 09, 16, 23, 30</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <footer>
+      Lubian Limpezas · CNPJ 44.883.814/0001-97 · Chapecó/SC<br>
+      <span>A arte de transformar obras em espaços memoráveis</span>
+    </footer>
+  </div>
+</body>
+</html>

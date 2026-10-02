@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Fatura {{cliente.nome}} – {{fatura.referencia}}</title>
+  <style>
+  :root{ --azul:#1e3a8a; --amarelo:#facc15; --preto:#0f172a; --bg:#ffffff; --borda:#e5e7eb; --verde:#16a34a; --azul-claro:#eff6ff; }
+  *{box-sizing:border-box}
+  html,body{ margin:0; background:var(--bg); color:var(--preto); font:400 12pt/1.5 "Inter",sans-serif; }
+  .sheet{ max-width:800px; margin:20px auto; padding:30px; background:#fff; border:1px solid var(--borda); border-radius:8px; }
+
+  .layout-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+  .layout-table td { vertical-align: top; }
+
+  .logo{ width:80px; height:80px; object-fit:contain; }
+  .brand h1{ margin:0; color:var(--azul); font-size:18pt; font-weight:800; }
+  .brand p{ margin:0; color:#475569; font-size:10pt; }
+
+  .header-right{ text-align:right; }
+  .header-right h2{ margin:0; color:var(--azul); font-size:24pt; font-weight:900; letter-spacing:1px; }
+  .header-right p{ margin:0; color:#64748b; font-weight:700; font-size:12pt; }
+
+  .info-box h3{ margin:0 0 5px; font-size:11pt; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; }
+  .info-box p{ margin:2px 0; font-size:11.5pt; }
+
+  table.items{ width:100%; border-collapse:collapse; margin-bottom:25px; }
+  table.items th{ background:var(--azul-claro); color:var(--azul); text-align:left; padding:10px; border-bottom:2px solid var(--azul); font-size:11pt; text-transform:uppercase; }
+  table.items td{ padding:12px 10px; border-bottom:1px solid var(--borda); font-size:11.5pt; }
+
+  .pay-card{ border:1px solid var(--borda); border-radius:8px; padding:16px; background:#fafafa; height: 100%; display: flex; flex-direction: column; box-sizing: border-box;}
+  .pay-card h4{ margin: 8px 0 12px; color:var(--azul); font-size:13pt; border-bottom:1px dashed #cbd5e1; padding-bottom:8px; }
+  
+  table.pay-table { width: 100%; border-collapse: collapse; font-size: 10.5pt; color: #475569; margin-top: auto;}
+  table.pay-table td { padding: 4px 0; }
+  table.pay-table td.right { text-align: right; white-space: nowrap; width: 30%; }
+  table.pay-table td:first-child { width: 70%; padding-right: 10px; }
+  table.pay-table tr.total td { padding-top: 12px; border-top: 2px solid var(--borda); font-size: 14pt; font-weight: 800; color: var(--azul); white-space: nowrap; }
+
+  .badge{ display:inline-block; background:var(--verde); color:#fff; font-size:9.5pt; font-weight:700; padding:4px 10px; border-radius:20px; margin-bottom: 4px; align-self: flex-start;}
+
+  .note-box{ border:1px solid #bfdbfe; background:var(--azul-claro); padding:20px; border-radius:8px; margin-bottom:25px; }
+  .note-box p{ margin:0 0 15px; color:var(--azul); font-weight:600; }
+  .calendar{ width:100%; border-collapse:collapse; text-align:center; background:#fff; }
+  .calendar th{ background:#dbeafe; color:var(--azul); padding:8px; border:1px solid #bfdbfe; font-size:11pt; }
+  .calendar td{ padding:10px; border:1px solid #bfdbfe; font-size:11.5pt; font-weight:600; color:#334155; }
+
+  footer{ text-align:center; padding-top:20px; border-top:1px solid var(--borda); font-size:10pt; color:#64748b; }
+  footer span{ display:block; color:var(--azul); font-weight:700; margin-top:4px; }
+  footer span::first-letter{ text-transform:uppercase; }
+  </style>
+</head>
+<body>
+  <div class="sheet">
+    <table class="layout-table" style="border-bottom:2px solid #1e3a8a; padding-bottom:15px; margin-bottom:20px;">
+      <tr>
+        <td style="width: 100px;">
+          <img class="logo" src="{{empresa.logoUrl}}" alt="Logo {{empresa.nome}}"/>
+        </td>
+        <td>
+          <div class="brand">
+            <h1>{{empresa.nome}}</h1>
+            <p>{{empresa.endereco}}<br>{{empresa.telefone}}</p>
+          </div>
+        </td>
+        <td style="text-align: right; vertical-align: middle;">
+          <div class="header-right">
+            <h2>FATURA</h2>
+            <p>#{{fatura.numero}}</p>
+          </div>
+        </td>
+      </tr>
+    </table>
+
+    <table class="layout-table">
+      <tr>
+        <td style="width: 50%;">
+          <div class="info-box">
+            <h3>Faturado Para:</h3>
+            <p><strong>{{cliente.nome}}</strong></p>
+            <p>{{cliente.enderecoLinha1}}<br>{{cliente.enderecoLinha2}}</p>
+          </div>
+        </td>
+        <td style="width: 50%;">
+          <div class="info-box">
+            <h3>Detalhes da Fatura:</h3>
+            <p>Data de Emissão: {{fatura.emissao}}</p>
+            <p>Vencimento: <strong>{{fatura.vencimento}}</strong></p>
+          </div>
+        </td>
+      </tr>
+    </table>
+
+    <table class="items">
+      <thead>
+        <tr>
+          <th>Descrição do Serviço</th>
+          <th style="text-align:right;">Quantidade</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Diárias programadas para {{fatura.referencia}}</td>
+          <td style="text-align:right;">{{diarias calculo.diariasProgramadas}}</td>
+        </tr>
+        {{#if calculo.faltas}}
+        <tr>
+          <td style="color: #dc2626;">Desconto: Abatimento de falta da equipe</td>
+          <td style="text-align:right; color: #dc2626;">- {{diarias calculo.faltas}}</td>
+        </tr>
+        {{/if}}
+        <tr>
+          <td style="font-weight:700; color:var(--azul);">Total a Faturar neste mês:</td>
+          <td style="text-align:right; font-weight:700;">{{Diarias calculo.diariasFaturadas}}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <table class="layout-table" style="height: 100%;">
+      <tr>
+        <td style="width: 48%; padding-right: 2%; height: 100%;">
+          <div class="pay-card">
+            {{#if calculo.especie}}<div class="badge">Mais Vantajoso</div>{{/if}}
+            <h4>{{#if calculo.especie}}Opção 1: {{/if}}PIX / Transf.</h4>
+            <table class="pay-table">
+              <tr>
+                <td>Valor Base ({{calculo.diariasFaturadas}} x {{moeda calculo.pix.diaria}})</td>
+                <td class="right">{{moeda calculo.pix.valorBase}}</td>
+              </tr>
+              {{#if calculo.pix.desconto}}
+              <tr>
+                <td>Desconto Antecipação ({{percentual calculo.pix.descontoPercentual}})</td>
+                <td class="right">- {{moeda calculo.pix.desconto}}</td>
+              </tr>
+              {{/if}}
+              <tr class="total">
+                <td>Total</td>
+                <td class="right">{{moeda calculo.pix.total}}</td>
+              </tr>
+            </table>
+          </div>
+        </td>
+        {{#if calculo.especie}}
+        <td style="width: 48%; padding-left: 2%; height: 100%;">
+          <div class="pay-card">
+            <div class="badge" style="background:#1e3a8a;">Pagamento à vista</div>
+            <h4>Opção 2: Dinheiro (Espécie)</h4>
+            <table class="pay-table">
+              <tr>
+                <td>Diária Especial Reduzida</td>
+                <td class="right">{{moeda calculo.especie.diaria}}</td>
+              </tr>
+              <tr>
+                <td>Cálculo Base ({{calculo.diariasFaturadas}} x {{moeda calculo.especie.diaria}})</td>
+                <td class="right">{{moeda calculo.especie.total}}</td>
+              </tr>
+              <tr class="total">
+                <td>Total</td>
+                <td class="right">{{moeda calculo.especie.total}}</td>
+              </tr>
+            </table>
+          </div>
+        </td>
+        {{/if}}
+      </tr>
+    </table>
+
+    {{#if calendario.length}}
+    <div class="note-box">
+      <p>{{saudacao}},<br>{{mensagem}}</p>
+      <table class="calendar">
+        <thead>
+          <tr>
+            {{#each calendario}}<th>{{nome}}:</th>{{/each}}
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            {{#each calendario}}<td>{{listaDias dias}}</td>{{/each}}
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    {{/if}}
+
+    <footer>
+      {{empresa.nome}} · CNPJ {{empresa.cnpj}} · {{empresa.cidade}}<br>
+      <span>{{empresa.slogan}}</span>
+    </footer>
+  </div>
+</body>
+</html>

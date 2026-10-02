@@ -163,7 +163,11 @@ Regras:
 
 **Contratos recorrentes / mensais**
 - Contrato com cliente, dias da semana fixos, diária R$ 180 (Pix/Cartão) ou R$ 160 (espécie)
-- Fatura mensal automática: dias trabalhados (vindos da agenda/presença) × diária − faltas
+- Fatura mensal automática (modelo Katiane): dias programados do mês (pelos dias da semana do
+  contrato, sem feriados) − faltas da equipe = diárias faturadas, com **duas opções na fatura**:
+  - Opção 1 — Pix/Transferência: diárias × R$ 180 − desconto de antecipação (ex.: 10%)
+  - Opção 2 — Dinheiro (espécie): diárias × R$ 160 (diária especial reduzida)
+- Vencimento padrão: emissão + 7 dias
 
 **Despesas**
 - Lançadas **por obra** (Uber, marmitas, produtos, frete, andaime) e gerais da empresa

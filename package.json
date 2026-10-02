@@ -8,7 +8,8 @@
   "scripts": {
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "orcamento": "tsx scripts/gerar-orcamento.ts"
+    "orcamento": "tsx scripts/gerar-orcamento.ts",
+    "fatura": "tsx scripts/gerar-fatura.ts"
   },
   "repository": {
     "type": "git",

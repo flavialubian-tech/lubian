@@ -1,0 +1,24 @@
+{
+  "cliente": {
+    "nome": "Katiane Laura Balzan",
+    "enderecoLinha1": "Rua Uruguai - Centro",
+    "enderecoLinha2": "Chapecó / SC"
+  },
+  "fatura": {
+    "numero": "5306",
+    "ano": 2026,
+    "mes": 10,
+    "emissao": "2026-09-29",
+    "prazoDias": 7
+  },
+  "contrato": {
+    "diasSemana": [1, 3, 5],
+    "excluirDias": [],
+    "diariaBase": 180,
+    "descontoAntecipacao": 0.1,
+    "diariaEspecie": 160
+  },
+  "faltas": 1,
+  "saudacao": "Querida Katiane",
+  "mensagem": "Confira abaixo os dias da semana programados para os atendimentos deste mês. Tudo organizado para manter o seu espaço impecável!"
+}

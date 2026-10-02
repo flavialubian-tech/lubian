@@ -1,19 +1,17 @@
 {
-  "empresa": {
-    "nome": "Lubian Limpezas",
-    "slogan": "a arte de transformar obras em espaços memoráveis",
-    "logoUrl": "assets/logo-lubian.png",
-    "cnpj": "44.883.814/0001-97",
-    "cidade": "Chapecó/SC"
-  },
   "documento": {
     "numero": "ORC-2026-0001",
     "data": "02/10/2026",
     "validade": "7 dias (até 09/10/2026)",
     "selo": "Engenharia de Limpeza & Handover"
   },
-  "cliente": { "nome": "Raíssa" },
-  "obra": { "local": "Residência - 2 Pavimentos", "area": "140 m²" },
+  "cliente": {
+    "nome": "Raíssa"
+  },
+  "obra": {
+    "local": "Residência - 2 Pavimentos",
+    "area": "140 m²"
+  },
   "servico": {
     "tipo": "Limpeza de Detalhamento Final",
     "cronograma": "02 Dias (Sábado e Domingo)",
@@ -34,38 +32,102 @@
     "texto": "Esquadrias com pintura escura e pisos vinílicos são superfícies de altíssima sensibilidade. O uso de produtos abrasivos, alcalinos ou esponjas comuns causa micro-arranhões irreversíveis e desbotamento imediato da pintura. A intervenção técnica utilizará estritamente produtos de pH neutro e microfibras premium para garantir a integridade total dos acabamentos."
   },
   "escopo": [
-    { "titulo": "Detalhamento de Esquadrias, Vidros e Toldos", "peso": 650, "meta": "Foco Principal da Vistoria",
-      "itens": ["Limpeza minuciosa das esquadrias pretas e portões com química não abrasiva.", "Lavagem técnica dos vidros internos, externos e desincrustação dos 03 toldos da área externa."] },
-    { "titulo": "Áreas Externas e Pavers", "peso": 400, "meta": "Garagem e calçadas laterais",
-      "itens": ["Lavagem corretiva do porcelanato da garagem e da área dos fundos.", "Desincrustação da calçada de paver nas laterais da residência."] },
-    { "titulo": "Pisos Internos Sensíveis", "peso": 450, "meta": "Térreo, escadaria e segundo pavimento",
-      "itens": ["Aspiração e limpeza úmida (técnica <i>dry-to-wet</i>) com pH neutro para realçar o porcelanato acetinado cinza.", "Higienização controlada do piso vinílico, evitando excesso de umidade nas juntas."] },
-    { "titulo": "Áreas Frias e Adesivos", "peso": 405, "meta": "Banheiros e Boxes",
-      "itens": ["Remoção segura das películas/adesivos de proteção dos vidros do box.", "Higienização de louças, revestimentos de parede e metais sem risco de oxidação."] }
+    {
+      "titulo": "Detalhamento de Esquadrias, Vidros e Toldos",
+      "peso": 650,
+      "meta": "Foco Principal da Vistoria",
+      "itens": [
+        "Limpeza minuciosa das esquadrias pretas e portões com química não abrasiva.",
+        "Lavagem técnica dos vidros internos, externos e desincrustação dos 03 toldos da área externa."
+      ]
+    },
+    {
+      "titulo": "Áreas Externas e Pavers",
+      "peso": 400,
+      "meta": "Garagem e calçadas laterais",
+      "itens": [
+        "Lavagem corretiva do porcelanato da garagem e da área dos fundos.",
+        "Desincrustação da calçada de paver nas laterais da residência."
+      ]
+    },
+    {
+      "titulo": "Pisos Internos Sensíveis",
+      "peso": 450,
+      "meta": "Térreo, escadaria e segundo pavimento",
+      "itens": [
+        "Aspiração e limpeza úmida (técnica <i>dry-to-wet</i>) com pH neutro para realçar o porcelanato acetinado cinza.",
+        "Higienização controlada do piso vinílico, evitando excesso de umidade nas juntas."
+      ]
+    },
+    {
+      "titulo": "Áreas Frias e Adesivos",
+      "peso": 405,
+      "meta": "Banheiros e Boxes",
+      "itens": [
+        "Remoção segura das películas/adesivos de proteção dos vidros do box.",
+        "Higienização de louças, revestimentos de parede e metais sem risco de oxidação."
+      ]
+    }
   ],
   "valorAgregado": {
     "titulo": "Entendendo o seu Investimento (Proteção do Projeto)",
     "texto": "A Lubian não realiza faxinas residenciais comuns. Este orçamento reflete a alocação de uma equipe especializada durante o final de semana para executar a <i>Engenharia de Limpeza</i>. Nosso trabalho exige maquinário de aspiração fina e química de pH controlado. O objetivo central deste serviço não é apenas remover sujeira, mas <strong>blindar o seu investimento</strong>, garantindo que acabamentos caros (como esquadrias pretas e piso vinílico) não sofram arranhões, manchas químicas ou desgastes irreversíveis por práticas inadequadas."
   },
   "incluidos": [
-    { "rotulo": "Produtos profissionais", "texto": "Soluções com pH controlado para pisos sensíveis e esquadrias." },
-    { "rotulo": "Acessórios de precisão", "texto": "Microfibras premium que não causam atrito e não soltam fiapos." },
-    { "rotulo": "Equipamentos e mobilização", "texto": "Transporte, alimentação e força-tarefa mobilizada no fim de semana." }
+    {
+      "rotulo": "Produtos profissionais",
+      "texto": "Soluções com pH controlado para pisos sensíveis e esquadrias."
+    },
+    {
+      "rotulo": "Acessórios de precisão",
+      "texto": "Microfibras premium que não causam atrito e não soltam fiapos."
+    },
+    {
+      "rotulo": "Equipamentos e mobilização",
+      "texto": "Transporte, alimentação e força-tarefa mobilizada no fim de semana."
+    }
   ],
   "responsabilidades": [
-    { "rotulo": "Acesso e segurança", "texto": "Disponibilizar acesso livre à residência nos dias combinados." },
-    { "rotulo": "Recursos básicos", "texto": "Disponibilizar água e energia elétrica ativa durante a execução." },
-    { "rotulo": "Vistoria final", "texto": "Acompanhar a conferência ao término do serviço para aprovação." }
+    {
+      "rotulo": "Acesso e segurança",
+      "texto": "Disponibilizar acesso livre à residência nos dias combinados."
+    },
+    {
+      "rotulo": "Recursos básicos",
+      "texto": "Disponibilizar água e energia elétrica ativa durante a execução."
+    },
+    {
+      "rotulo": "Vistoria final",
+      "texto": "Acompanhar a conferência ao término do serviço para aprovação."
+    }
   ],
   "precificacao": {
     "equipe": [
-      { "nome": "Flávia", "diaria": 250, "dias": 2 },
-      { "nome": "Leandro", "diaria": 180, "dias": 2 }
+      {
+        "nome": "Flávia",
+        "diaria": 250,
+        "dias": 2
+      },
+      {
+        "nome": "Leandro",
+        "diaria": 180,
+        "dias": 2
+      }
     ],
-    "custosVariaveis": { "transporte": 80, "alimentacao": 100, "produtosFretes": 160 },
+    "custosVariaveis": {
+      "transporte": 80,
+      "alimentacao": 100,
+      "produtosFretes": 160
+    },
     "markup": 0.35,
-    "ancoragem": { "tipo": "desconto_percentual", "percentual": 0.15 },
-    "arredondamento": { "modo": "proximo", "passo": 5 }
+    "ancoragem": {
+      "tipo": "desconto_percentual",
+      "percentual": 0.15
+    },
+    "arredondamento": {
+      "modo": "proximo",
+      "passo": 5
+    }
   },
   "rotuloDesconto": "Desconto Especial",
   "descricaoSubtotal": "Serviços técnicos itemizados (140 m²)"

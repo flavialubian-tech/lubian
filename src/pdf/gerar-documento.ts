@@ -9,11 +9,15 @@ const PASTA_TEMPLATES = join(RAIZ, 'templates');
 const hb = Handlebars.create();
 const formatoMoeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 // Intl usa espaço não separável depois de "R$"; trocamos por espaço comum como nos modelos.
-hb.registerHelper('moeda', (v: number) => formatoMoeda.format(v).replace(/ /g, ' '));
+hb.registerHelper('moeda', (v: number) => formatoMoeda.format(v).replace(/\u00a0/g, ' '));
 hb.registerHelper('inc', (i: number) => i + 1);
 hb.registerHelper('maiusculas', (s: string) => (s ?? '').toLocaleUpperCase('pt-BR'));
+hb.registerHelper('percentual', (v: number) => `${Math.round(v * 1000) / 10}%`.replace('.', ','));
+hb.registerHelper('diarias', (n: number) => `${n} ${n === 1 ? 'diária' : 'diárias'}`);
+hb.registerHelper('Diarias', (n: number) => `${n} ${n === 1 ? 'Diária' : 'Diárias'}`);
+hb.registerHelper('listaDias', (dias: number[]) => dias.map((d) => String(d).padStart(2, '0')).join(', '));
 
-export type ModeloDocumento = 'orcamento-tecnico';
+export type ModeloDocumento = 'orcamento-tecnico' | 'fatura-mensal';
 
 const TIPOS_IMAGEM: Record<string, string> = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', svg: 'image/svg+xml', webp: 'image/webp' };
 
