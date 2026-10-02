@@ -43,5 +43,6 @@ npm run orcamento -- exemplos/orcamento-raissa.json saida/orcamento.pdf
 O exemplo reproduz o orçamento da Raíssa: custo R$ 1.200 × 1,35 = R$ 1.620,
 desconto especial de 15% → Valor de Tabela R$ 1.905, itens R$ 650 / 400 / 450 / 405.
 
-Para usar o logo sem depender da internet, salve o arquivo em `assets/` e use
-`"logoUrl": "assets/logo-lubian.png"` — ele é embutido no PDF.
+O logo oficial fica em `assets/logo-lubian.png` (original em alta: `assets/logo-lubian-original.webp`)
+e é embutido no PDF, sem depender da internet:
+`"logoUrl": "assets/logo-lubian.png"`.
