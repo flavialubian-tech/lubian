@@ -55,7 +55,7 @@ export function textoCronograma(datas: string[]) {
 }
 
 /** Normaliza nomes para casar a força-tarefa com o cadastro da equipe ("Flávia" = "flavia "). */
-const chaveNome = (n: string) =>
+export const chaveNome = (n: string) =>
   n
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')

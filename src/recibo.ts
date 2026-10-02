@@ -66,3 +66,10 @@ export function montarRecibo(e: EntradaRecibo): ResultadoRecibo {
     })),
   };
 }
+
+/** '2026-09-25' → "25 de Setembro de 2026" (data da baixa no recibo). */
+export function dataPorExtenso(iso: string) {
+  const d = new Date(`${iso}T00:00:00Z`);
+  const mes = d.toLocaleDateString('pt-BR', { month: 'long', timeZone: 'UTC' });
+  return `${d.getUTCDate()} de ${capitalizar(mes)} de ${d.getUTCFullYear()}`;
+}

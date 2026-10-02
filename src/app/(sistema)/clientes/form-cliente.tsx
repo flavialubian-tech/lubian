@@ -49,7 +49,15 @@ export function FormCliente({ cliente, parceiros }: { cliente?: Cliente; parceir
         name="prazoPagamento"
         defaultValue={c?.prazoPagamento ?? ''}
         placeholder="Ex.: 50% sinal / 50% entrega · 10 dias úteis após NF"
-        className="sm:col-span-2"
+      />
+      <Campo
+        rotulo="Condição especial: 100% em N dias úteis após a entrega"
+        name="prazoDiasUteis"
+        type="number"
+        min={1}
+        max={90}
+        defaultValue={c?.prazoDiasUteis ?? ''}
+        placeholder="Vazio = 50% sinal / 50% entrega"
       />
       <AreaTexto rotulo="Observações" name="observacoes" defaultValue={c?.observacoes ?? ''} className="sm:col-span-2" />
       <div className="sm:col-span-2">

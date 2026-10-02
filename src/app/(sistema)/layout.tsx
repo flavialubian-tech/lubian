@@ -12,10 +12,15 @@ export default async function LayoutSistema({ children }: { children: React.Reac
     { href: '/', rotulo: 'Painel' },
     { href: '/agenda', rotulo: 'Agenda' },
     { href: '/orcamentos', rotulo: 'Orçamentos' },
+    { href: '/financeiro', rotulo: 'Financeiro' },
+    { href: '/contratos', rotulo: 'Contratos' },
+    { href: '/despesas', rotulo: 'Despesas' },
+    { href: '/relatorios', rotulo: 'Relatórios' },
     { href: '/vistorias', rotulo: 'Vistorias' },
     { href: '/clientes', rotulo: 'Clientes' },
     { href: '/obras', rotulo: 'Obras' },
     { href: '/equipe', rotulo: 'Equipe' },
+    { href: '/equipe/acerto', rotulo: 'Acerto da equipe' },
     { href: '/servicos', rotulo: 'Serviços' },
     { href: '/pre-qualificacao', rotulo: 'Pré-qualificação' },
     ...(sessao.membroEquipeId ? [{ href: '/minha-semana', rotulo: 'Minha semana' }] : []),
@@ -24,7 +29,7 @@ export default async function LayoutSistema({ children }: { children: React.Reac
 
   return (
     <div className="min-h-dvh md:flex">
-      <aside className="sticky top-0 z-10 border-b border-borda bg-white md:h-dvh md:w-60 md:shrink-0 md:border-r md:border-b-0">
+      <aside className="print:hidden sticky top-0 z-10 border-b border-borda bg-white md:h-dvh md:w-60 md:shrink-0 md:border-r md:border-b-0">
         <div className="flex items-center gap-3 px-4 py-3 md:py-5">
           <Link href="/" className="flex items-center gap-2">
             <Image src={logo} alt="" width={40} height={40} />
@@ -42,8 +47,8 @@ export default async function LayoutSistema({ children }: { children: React.Reac
           </form>
         </div>
       </aside>
-      <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 md:py-8">{children}</main>
-      <form action={sair} className="px-4 pb-6 md:hidden">
+      <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 md:py-8 print:max-w-none print:p-0">{children}</main>
+      <form action={sair} className="px-4 pb-6 md:hidden print:hidden">
         <button className="text-xs font-semibold text-azul">
           Sair ({sessao.nome})
         </button>

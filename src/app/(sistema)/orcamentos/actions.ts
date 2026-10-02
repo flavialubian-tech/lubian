@@ -2,10 +2,11 @@
 
 import { revalidatePath } from 'next/cache';
 import type { EstadoForm } from '@/components/formulario';
-import { campo, executarAcao } from '@/lib/acao';
+import { campo, executarAcao, numeroBR } from '@/lib/acao';
 import { exigirGestao, exigirOperador } from '@/lib/auth';
-import { salvarArquivo } from '@/lib/arquivos';
-import { liberarPreReserva, marcarEntregue, reagendar, registrarSinal } from '@/lib/operacao';
+import { lancarDespesa, registrarSinal } from '@/lib/financeiro';
+import { lerPagamento } from '@/lib/form-pagamento';
+import { liberarPreReserva, marcarEntregue, reagendar } from '@/lib/operacao';
 import {
   aprovarManualmente,
   enviarOrcamento,
@@ -15,9 +16,6 @@ import {
   salvarOrcamento,
   type SalvarOrcamentoInput,
 } from '@/lib/orcamentos';
-
-/** "1.234,56", "1234,56" ou "1234.56" → 1234.56 */
-const numeroBR = (v: string | null) => (v?.includes(',') ? v.replace(/\./g, '').replace(',', '.') : (v ?? ''));
 
 const ctx = (s: { empresaId: string; usuarioId: string }) => ({ empresaId: s.empresaId, usuarioId: s.usuarioId });
 
@@ -81,17 +79,9 @@ export async function aprovarManualAcao(id: string): Promise<EstadoForm> {
 export async function registrarSinalAcao(id: string, _: EstadoForm, f: FormData): Promise<EstadoForm> {
   const sessao = await exigirOperador();
   return executarAcao(async () => {
-    const arquivo = f.get('comprovante');
-    const comprovante = arquivo instanceof File && arquivo.size > 0 ? await salvarArquivo(sessao.empresaId, arquivo, { aceitaPdf: true }) : null;
-    await registrarSinal(ctx(sessao), id, {
-      valor: numeroBR(campo(f, 'valor')),
-      forma: (campo(f, 'forma') ?? 'pix') as 'pix',
-      pagoEm: campo(f, 'pagoEm') ?? '',
-      comprovante,
-    });
-    revalidatePath(`/orcamentos/${id}`);
-    revalidatePath('/agenda');
-    return { ok: 'Sinal registrado: agenda confirmada' };
+    // Sem revalidatePath: o formulário baixa o recibo e depois atualiza a tela (router.refresh).
+    const pagamentoId = await registrarSinal(ctx(sessao), id, await lerPagamento(sessao.empresaId, f));
+    return { ok: 'Sinal registrado: agenda confirmada.', link: { href: `/api/recibos/${pagamentoId}?baixar=1`, rotulo: 'Baixar recibo do sinal (PDF)', baixar: true } };
   });
 }
 
@@ -122,5 +112,21 @@ export async function entregueAcao(id: string): Promise<EstadoForm> {
     revalidatePath(`/orcamentos/${id}`);
     revalidatePath('/agenda');
     return { ok: 'Serviço marcado como entregue' };
+  });
+}
+
+export async function lancarDespesaObraAcao(id: string, _: EstadoForm, f: FormData): Promise<EstadoForm> {
+  const sessao = await exigirOperador();
+  return executarAcao(async () => {
+    await lancarDespesa(ctx(sessao), {
+      orcamentoId: id,
+      categoria: (campo(f, 'categoria') ?? 'outros') as 'outros',
+      descricao: campo(f, 'descricao') ?? '',
+      valor: numeroBR(campo(f, 'valor')),
+      data: campo(f, 'data') ?? '',
+    });
+    revalidatePath(`/orcamentos/${id}`);
+    revalidatePath('/despesas');
+    return { ok: 'Despesa lançada' };
   });
 }

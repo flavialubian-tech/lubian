@@ -2,7 +2,9 @@
  * Teste de ponta a ponta no navegador, contra um servidor rodando (npm run dev).
  *   BASE_URL=http://localhost:3000 npm run teste:e2e
  * Percorre: login → cliente → obra → vistoria → orçamento → envio → aprovação do cliente →
- * pré-reserva na agenda → sinal registrado → agenda confirmada → "Minha semana" do Anderson.
+ * pré-reserva na agenda → sinal registrado → agenda confirmada → "Minha semana" do Anderson →
+ * entrega → saldo registrado → recibo de quitação (PDF) → contrato recorrente → fatura (PDF) →
+ * despesa da obra → lucro real no relatório.
  */
 import { mkdir } from 'node:fs/promises';
 import { chromium, type Page } from 'playwright-core';
@@ -13,6 +15,11 @@ const SAIDA = 'saida/e2e';
 const sufixo = Date.now().toString().slice(-5);
 const obraNome = `Apto ${sufixo}`;
 const amanha = somarDias(hojeSP(), 1);
+const pdf = async (p: Page, url: string) => {
+  const resp = await p.request.get(url.startsWith('http') ? url : `${BASE}${url}`);
+  if (resp.headers()['content-type'] !== 'application/pdf') throw new Error(`PDF não gerado (${resp.status()}): ${url}`);
+  return resp.headers()['content-disposition'] ?? '';
+};
 await mkdir(SAIDA, { recursive: true });
 
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined });
@@ -27,7 +34,8 @@ const passo = async (nome: string, fn: () => Promise<void>) => {
   await fn();
   console.log('ok');
 };
-const foto = (p: Page, nome: string) => p.screenshot({ path: `${SAIDA}/${nome}.png`, fullPage: true });
+// caret: 'initial' — sem isso o Playwright injeta caret-color e, antes da hidratação, o React acusa diferença.
+const foto = (p: Page, nome: string) => p.screenshot({ path: `${SAIDA}/${nome}.png`, fullPage: true, caret: 'initial' });
 
 try {
   await passo('login (Bruna)', async () => {
@@ -154,6 +162,63 @@ try {
     await card.getByText('Confirmada').waitFor();
     await card.getByText('abrir no Maps').waitFor();
     await foto(anderson, '08-minha-semana');
+  });
+
+  await passo('serviço entregue → saldo registrado → recibo de quitação em PDF', async () => {
+    await page.goto(urlOrcamento);
+    page.once('dialog', (d) => d.accept());
+    await page.click('button:has-text("Serviço entregue")');
+    await page.getByText('✓ Serviço entregue em').waitFor();
+    await page.goto(`${BASE}/financeiro?q=${encodeURIComponent(obraNome)}`);
+    const saldo = page.locator(`li[data-cobranca="${obraNome}"][data-tipo=saldo]`);
+    await saldo.locator('summary').click();
+    await saldo.locator('button:has-text("Registrar pagamento")').click();
+    const recibo = saldo.locator('a[data-recibo]');
+    await recibo.waitFor();
+    const nome = await pdf(page, (await recibo.getAttribute('href'))!);
+    if (!/Recibo-Quitacao-REC-\d{4}-\d{4}\.pdf/.test(nome)) throw new Error(`Não é recibo de quitação: ${nome}`);
+    await foto(page, '09-financeiro');
+  });
+
+  await passo('contrato recorrente → fatura em PDF', async () => {
+    await page.goto(`${BASE}/contratos`);
+    const novo = page.locator('form', { has: page.locator('button:has-text("Cadastrar contrato")') });
+    const opcao = await novo.locator('select[name=obraId] option', { hasText: obraNome }).first().getAttribute('value');
+    await novo.locator('select[name=obraId]').selectOption(opcao!);
+    await novo.locator('input[name=saudacao]').fill('Querida cliente');
+    for (const d of ['1', '3', '5']) await novo.locator(`input[name=diasSemana][value="${d}"]`).check();
+    await novo.locator('button:has-text("Cadastrar contrato")').click();
+    const contrato = page.locator(`[data-contrato="${obraNome}"]`);
+    await contrato.waitFor();
+    await contrato.locator('input[name=faltas]').fill('1');
+    await contrato.locator('button:has-text("Gerar fatura")').click();
+    await contrato.getByText(/Fatura FAT-\d{4}-\d{4} gerada/).waitFor();
+    await contrato.locator('[data-fatura]').first().waitFor();
+    await pdf(page, (await contrato.locator('a:has-text("PDF")').first().getAttribute('href'))!);
+    // Link público enviado pelo WhatsApp (sem login).
+    const whats = decodeURIComponent((await contrato.locator('a:has-text("WhatsApp")').first().getAttribute('href'))!);
+    const publico = whats.match(/https?:\/\/\S+\/f\/[\w-]+/)?.[0];
+    if (!publico) throw new Error('Mensagem sem link da fatura');
+    const anonimo = await browser.newContext();
+    await pdf(await anonimo.newPage(), publico);
+    await anonimo.close();
+    await foto(page, '10-contratos');
+  });
+
+  await passo('despesa da obra → lucro real no relatório', async () => {
+    await page.goto(`${BASE}/despesas`);
+    const opcao = await page.locator('select[name=orcamentoId] option', { hasText: obraNome }).first().getAttribute('value');
+    await page.selectOption('select[name=orcamentoId]', opcao!);
+    await page.selectOption('select[name=categoria]', 'transporte');
+    await page.fill('input[name=descricao]', 'Uber equipe');
+    await page.fill('input[name=valor]', '123,45');
+    await page.click('button:has-text("Lançar despesa")');
+    await page.getByText('Despesa lançada').waitFor();
+    await page.goto(`${BASE}/relatorios?mes=${hojeSP().slice(0, 7)}`);
+    const linha = page.locator(`tr[data-lucro-obra="${obraNome}"]`);
+    await linha.waitFor();
+    await linha.locator('[data-despesas]', { hasText: 'R$ 123,45' }).waitFor();
+    await foto(page, '11-relatorios');
   });
 
   await passo('auxiliar não acessa o sistema', async () => {

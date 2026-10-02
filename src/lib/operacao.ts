@@ -2,10 +2,11 @@
  * Agenda e operação (Fase 2): pré-reservas, sinal, entrega, bloqueios e presença.
  * Toda função recebe a empresa da sessão e filtra por ela.
  */
-import { and, asc, eq, gte, inArray, isNull, lte, ne, notExists, or } from 'drizzle-orm';
+import { and, asc, eq, exists, gte, inArray, isNull, lte, ne, or } from 'drizzle-orm';
 import { z } from 'zod';
 import { db, schema } from '@/db';
 import { ehData, gerarAlocacoes, hojeSP, mapearForcaTarefa, normalizarDatas, statusAlocacao } from './agenda';
+import { ajustarVencimentoFinal, cancelarCobrancasAbertas, criarCobrancasDoOrcamento, dispensaSinal, reabrirCobrancas } from './contas-receber';
 import { ErroNegocio } from './erros';
 
 interface Contexto {
@@ -36,7 +37,7 @@ export async function sinalDoOrcamento(orcamentoId: string) {
  * Deixa as alocações do serviço iguais a força-tarefa × datas previstas, com o status certo
  * (pré-reserva, confirmada ou concluída). Mantém a presença já marcada nos dias que continuam.
  */
-async function sincronizarAlocacoes(empresaId: string, orcamentoId: string) {
+export async function sincronizarAlocacoes(empresaId: string, orcamentoId: string) {
   const orc = await buscarAprovado(empresaId, orcamentoId);
   const membros = await db.query.equipe.findMany({ where: and(eq(schema.equipe.empresaId, empresaId), eq(schema.equipe.ativo, true)) });
   const { encontrados, naoEncontrados } = mapearForcaTarefa(
@@ -47,7 +48,8 @@ async function sincronizarAlocacoes(empresaId: string, orcamentoId: string) {
     encontrados.map((m) => ({ membroEquipeId: m.id })),
     orc.datasPrevistas,
   );
-  const status = statusAlocacao({ sinalPago: !!(await sinalDoOrcamento(orcamentoId)), entregue: !!orc.entregueEm });
+  const confirmada = !!(await sinalDoOrcamento(orcamentoId)) || (await dispensaSinal(orcamentoId));
+  const status = statusAlocacao({ sinalPago: confirmada, entregue: !!orc.entregueEm });
 
   const atuais = await db.query.alocacoes.findMany({ where: eq(schema.alocacoes.orcamentoId, orcamentoId) });
   const chave = (a: { membroEquipeId: string; data: string }) => `${a.membroEquipeId}|${a.data}`;
@@ -66,8 +68,9 @@ async function sincronizarAlocacoes(empresaId: string, orcamentoId: string) {
   return { naoEncontrados };
 }
 
-/** Na aprovação (cliente ou manual): força-tarefa × datas previstas em pré-reserva. */
+/** Na aprovação (cliente ou manual): contas a receber e força-tarefa × datas previstas em pré-reserva. */
 export async function criarPreReservas(empresaId: string, orcamentoId: string) {
+  await criarCobrancasDoOrcamento(empresaId, orcamentoId);
   const { naoEncontrados } = await sincronizarAlocacoes(empresaId, orcamentoId);
   if (naoEncontrados.length) {
     await registrarEvento(orcamentoId, null, 'agenda', `Sem cadastro na equipe (não escalados): ${naoEncontrados.join(', ')}`);
@@ -82,6 +85,7 @@ export async function reagendar(ctx: Contexto, id: string, datas: string[]) {
   if (!novas.length) throw new ErroNegocio('Informe ao menos uma data');
   await db.update(schema.orcamentos).set({ datasPrevistas: novas, atualizadoEm: new Date() }).where(eq(schema.orcamentos.id, id));
   await sincronizarAlocacoes(ctx.empresaId, id);
+  await reabrirCobrancas(ctx.empresaId, id, novas);
   await registrarEvento(id, ctx.usuarioId, 'agenda', `Datas: ${novas.map((d) => d.split('-').reverse().join('/')).join(', ')}`);
 }
 
@@ -90,42 +94,18 @@ export async function liberarPreReserva(ctx: Contexto, id: string) {
   await buscarAprovado(ctx.empresaId, id);
   if (await sinalDoOrcamento(id)) throw new ErroNegocio('Sinal já pago: a agenda está confirmada');
   await db.update(schema.alocacoes).set({ status: 'cancelada' }).where(eq(schema.alocacoes.orcamentoId, id));
+  await cancelarCobrancasAbertas(id);
   await registrarEvento(id, ctx.usuarioId, 'agenda', 'Pré-reserva liberada (sem sinal)');
 }
 
 export const FORMAS_PAGAMENTO = { pix: 'Pix', dinheiro: 'Dinheiro', cartao: 'Cartão', transferencia: 'Transferência' } as const;
-
-export const registrarSinalSchema = z.object({
-  valor: z.coerce.number().positive('Informe o valor'),
-  forma: z.enum(['pix', 'dinheiro', 'cartao', 'transferencia']),
-  pagoEm: z.string().refine(ehData, 'Data inválida'),
-  comprovante: z.string().nullable().default(null),
-});
-
-/** Sinal de 50% pago: grava o pagamento e confirma a agenda (D3). */
-export async function registrarSinal(ctx: Contexto, id: string, entrada: z.input<typeof registrarSinalSchema>) {
-  const dados = registrarSinalSchema.parse(entrada);
-  await buscarAprovado(ctx.empresaId, id);
-  if (await sinalDoOrcamento(id)) throw new ErroNegocio('O sinal deste orçamento já foi registrado');
-  await db.insert(schema.pagamentos).values({
-    empresaId: ctx.empresaId,
-    orcamentoId: id,
-    tipo: 'sinal',
-    valor: dados.valor.toFixed(2),
-    forma: dados.forma,
-    pagoEm: dados.pagoEm,
-    comprovante: dados.comprovante,
-    registradoPorId: ctx.usuarioId,
-  });
-  await sincronizarAlocacoes(ctx.empresaId, id);
-  await registrarEvento(id, ctx.usuarioId, 'sinal_pago', `R$ ${dados.valor.toFixed(2)} · ${FORMAS_PAGAMENTO[dados.forma]}`);
-}
 
 /** "Serviço entregue": alocações concluídas (libera a quitação). */
 export async function marcarEntregue(ctx: Contexto, id: string) {
   const orc = await buscarAprovado(ctx.empresaId, id);
   if (orc.entregueEm) return;
   await db.update(schema.orcamentos).set({ entregueEm: new Date() }).where(eq(schema.orcamentos.id, id));
+  await ajustarVencimentoFinal(ctx.empresaId, id, hojeSP());
   await db
     .update(schema.alocacoes)
     .set({ status: 'concluida' })
@@ -264,7 +244,7 @@ export async function listarBloqueios(empresaId: string, de: string, ate: string
     .orderBy(asc(schema.bloqueios.dataInicio));
 }
 
-/** Orçamentos aprovados (pré-reserva) ainda sem sinal registrado. */
+/** Orçamentos aprovados (pré-reserva) com o sinal ainda em aberto. */
 export async function listarSinaisPendentes(empresaId: string) {
   const linhas = await db
     .select({
@@ -285,11 +265,11 @@ export async function listarSinaisPendentes(empresaId: string) {
         eq(schema.orcamentos.empresaId, empresaId),
         eq(schema.orcamentos.status, 'aprovado'),
         isNull(schema.orcamentos.entregueEm),
-        notExists(
+        exists(
           db
-            .select({ id: schema.pagamentos.id })
-            .from(schema.pagamentos)
-            .where(and(eq(schema.pagamentos.orcamentoId, schema.orcamentos.id), eq(schema.pagamentos.tipo, 'sinal'))),
+            .select({ id: schema.cobrancas.id })
+            .from(schema.cobrancas)
+            .where(and(eq(schema.cobrancas.orcamentoId, schema.orcamentos.id), eq(schema.cobrancas.tipo, 'sinal'), eq(schema.cobrancas.status, 'aberta'))),
         ),
       ),
     )
