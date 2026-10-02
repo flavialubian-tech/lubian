@@ -215,7 +215,7 @@ Numeração sequencial automática (ORC-2026-0001, REC-…, FAT-…).
 
 | Fase | Entrega | Resultado para o negócio |
 |---|---|---|
-| **1 — Núcleo comercial** | Login/perfis, cadastros (clientes, obras, equipe, serviços), vistoria básica com fotos, motor de orçamento (markup) + trava de markup mínimo 30%, **PDF do Orçamento**, link de aprovação, funil + follow-up, botão WhatsApp | Bruna e Flávia já orçam e vendem pelo sistema |
+| **1 — Núcleo comercial** ✅ | Login/perfis, cadastros (clientes, obras, equipe, serviços), vistoria básica com fotos, motor de orçamento (markup) + trava de markup mínimo 30%, **PDF do Orçamento**, link de aprovação, funil + follow-up, botão WhatsApp | Bruna e Flávia já orçam e vendem pelo sistema |
 | **2 — Agenda e operação** | Agenda com cores, multi-dias, conflitos, visão da equipe, pré-reserva/confirmação, presença, fotos, serviço entregue | Escala organizada, equipe vê a semana no celular |
 | **3 — Financeiro** | Contas a receber, Recibos de Sinal/Quitação, Faturas mensais, despesas por obra, acerto da equipe, relatórios de lucro e ranking | Controle de "não pagar para trabalhar" |
 | **4 — Automação** | Integração Asaas (Pix QR + baixa automática), lembretes automáticos | Bruna para de conferir extrato manualmente |

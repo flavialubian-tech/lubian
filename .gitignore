@@ -1,2 +1,7 @@
 node_modules/
 saida/
+.data/
+.next/
+next-env.d.ts
+*.tsbuildinfo
+.env*.local

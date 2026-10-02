@@ -3,7 +3,8 @@ import { extname, join } from 'node:path';
 import Handlebars from 'handlebars';
 import { chromium } from 'playwright-core';
 
-const RAIZ = join(import.meta.dirname, '..', '..');
+// Caminhos relativos à raiz do projeto (de onde o servidor e os scripts rodam).
+const RAIZ = process.cwd();
 const PASTA_TEMPLATES = join(RAIZ, 'templates');
 
 const hb = Handlebars.create();
@@ -22,7 +23,7 @@ export type ModeloDocumento = 'orcamento-tecnico' | 'fatura-mensal' | 'recibo';
 const TIPOS_IMAGEM: Record<string, string> = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', svg: 'image/svg+xml', webp: 'image/webp' };
 
 /** Logo salvo no repositório (ex.: "assets/logo.png") vai embutido no PDF, sem depender da internet. */
-async function embutirLogo(logoUrl: string | undefined): Promise<string | undefined> {
+async function embutirLogo(logoUrl: string | null | undefined): Promise<string | null | undefined> {
   if (!logoUrl || /^(https?:|data:)/.test(logoUrl)) return logoUrl;
   const tipo = TIPOS_IMAGEM[extname(logoUrl).slice(1).toLowerCase()] ?? 'application/octet-stream';
   return `data:${tipo};base64,${(await readFile(join(RAIZ, logoUrl))).toString('base64')}`;
@@ -30,7 +31,7 @@ async function embutirLogo(logoUrl: string | undefined): Promise<string | undefi
 
 export async function renderizarHtml(
   modelo: ModeloDocumento,
-  dados: { empresa?: { logoUrl?: string } } & Record<string, unknown>,
+  dados: { empresa?: { logoUrl?: string | null } } & Record<string, unknown>,
 ): Promise<string> {
   const fonte = await readFile(join(PASTA_TEMPLATES, `${modelo}.html`), 'utf8');
   const empresa = dados.empresa && { ...dados.empresa, logoUrl: await embutirLogo(dados.empresa.logoUrl) };
