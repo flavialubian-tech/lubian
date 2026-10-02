@@ -8,7 +8,6 @@ campos dinâmicos e gera o PDF mantendo o layout.
 | `orcamento-tecnico.html` | Orçamento Técnico (Padrão Luva Branca) | ✅ pronto (original em `_original-orcamento-raissa.html`) |
 | `recibo.html` | Recibo de **Sinal** e de **Quitação** (mesmo modelo, `"tipo": "sinal"` ou `"quitacao"`) | ✅ pronto (original em `_original-recibo-quitacao-christian.pdf`) |
 | `fatura-mensal.html` | Fatura Mensal (contratos recorrentes) | ✅ pronto (original em `_original-fatura-katiane.html`) |
-| `checklist-handover.html` | Checklist / Termo de Entrega | aguardando modelo |
 
 ## Como enviar
 

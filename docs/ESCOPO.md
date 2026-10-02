@@ -12,7 +12,7 @@ o ciclo completo de uma obra:
 
 ```
 Lead (WhatsApp) → Vistoria Técnica → Orçamento → Aprovação do cliente → Sinal 50%
-   → Agenda/Equipe → Execução + Checklist Handover → Quitação 50% → Acerto da equipe
+   → Agenda/Equipe → Execução → Quitação 50% → Acerto da equipe
    → Relatório de lucro real da obra
 ```
 
@@ -31,7 +31,7 @@ sua própria marca, sem retrabalho.
 |---|---|---|---|
 | **Gestão** (admin) | Flávia | Tudo: custos, margens, lucro, configurações | Celular (vistorias) + PC |
 | **Administrativo** | Bruna | Clientes, orçamentos, agenda, financeiro, WhatsApp, **com visão de custos e markup** (D5) | Computador |
-| **Líder de equipe** | Anderson | Somente leitura: escala e agenda da semana, endereço da obra, checklist | Celular |
+| **Líder de equipe** | Anderson | Somente leitura: escala e agenda da semana, endereço da obra | Celular |
 | **Auxiliar** | Leandro, Nicoly… | Somente a própria escala/agenda | Celular |
 | **Cliente** (sem login) | Arquitetos, construtoras, PF | Link seguro: ver/aprovar orçamento, baixar fatura e recibos, ver Pix | Celular |
 
@@ -67,7 +67,7 @@ sua própria marca, sem retrabalho.
 - Vidros/Fachadas em Altura (NR-35)
 - Limpeza Recorrente/Mensal
 - Cada serviço com: descrição técnica padrão (texto que vai no PDF), faixa de referência
-  R$/m² (ex.: Intermediária R$ 11–14, Final R$ 15–18) e checklist padrão
+  R$/m² (ex.: Intermediária R$ 11–14, Final R$ 15–18)
 
 ### 3.2 Pré-qualificação rápida (atendimento — Bruna)
 Calculadora simples para o WhatsApp: m² × faixa R$/m² do serviço, respeitando o
@@ -137,11 +137,12 @@ Regras:
 - Bloqueios: folgas, feriados, indisponibilidade
 - Visão da equipe (líderes/auxiliares): "Minha semana" com endereço (abre no Maps) e horário
 
-### 3.7 Execução e Checklist Handover
-- Checklist por tipo de serviço (itens marcáveis no celular)
-- **Fotos antes/depois** por ambiente
+### 3.7 Execução
 - Registro de presença da equipe no dia (alimenta o acerto e as faltas)
-- Ao concluir: gera o **Checklist/Termo de Entrega** em PDF para o cliente
+- **Fotos antes/depois** por ambiente (opcional)
+- Marcar serviço como **entregue** (libera a cobrança da quitação)
+- *Fora do escopo atual:* checklist de execução e termo de entrega — a Lubian ainda não usa;
+  pode entrar no futuro, com modelo próprio
 
 ### 3.8 Financeiro
 
@@ -188,8 +189,7 @@ gera o PDF com fidelidade ao layout (renderização em navegador headless):
 2. Recibo de Sinal (Reserva de Agenda)
 3. Recibo de Quitação
 4. Fatura Mensal (recorrentes)
-5. Checklist / Termo de Entrega (Handover)
-6. Extrato de acerto da equipe *(interno)*
+5. Extrato de acerto da equipe *(interno)*
 
 Numeração sequencial automática (ORC-2026-0001, REC-…, FAT-…).
 
@@ -216,7 +216,7 @@ Numeração sequencial automática (ORC-2026-0001, REC-…, FAT-…).
 | Fase | Entrega | Resultado para o negócio |
 |---|---|---|
 | **1 — Núcleo comercial** | Login/perfis, cadastros (clientes, obras, equipe, serviços), vistoria básica com fotos, motor de orçamento (markup) + trava de markup mínimo 30%, **PDF do Orçamento**, link de aprovação, funil + follow-up, botão WhatsApp | Bruna e Flávia já orçam e vendem pelo sistema |
-| **2 — Agenda e operação** | Agenda com cores, multi-dias, conflitos, visão da equipe, pré-reserva/confirmação, checklist handover + fotos, presença | Escala organizada, equipe vê a semana no celular |
+| **2 — Agenda e operação** | Agenda com cores, multi-dias, conflitos, visão da equipe, pré-reserva/confirmação, presença, fotos, serviço entregue | Escala organizada, equipe vê a semana no celular |
 | **3 — Financeiro** | Contas a receber, Recibos de Sinal/Quitação, Faturas mensais, despesas por obra, acerto da equipe, relatórios de lucro e ranking | Controle de "não pagar para trabalhar" |
 | **4 — Automação** | Integração Asaas (Pix QR + baixa automática), lembretes automáticos | Bruna para de conferir extrato manualmente |
 | **5 — Expansão** | NFS-e, WhatsApp API oficial, cadastro de outras empresas (SaaS comercial) | Novo produto/receita |
