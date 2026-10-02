@@ -1,0 +1,13 @@
+{
+  "tipo": "quitacao",
+  "numero": "",
+  "dataBaixa": "2026-09-25",
+  "cliente": { "nome": "Christian Dalla Rosa" },
+  "obra": { "local": "Ed. Vila Zenaide - Apto 2702", "area": "120 m²", "localNoTexto": "no Edifício Vila Zenaide (Apto 2702)" },
+  "servico": { "tipo": "Limpeza Intermediária" },
+  "selo": "Atendimento Corporativo Flex",
+  "pagamentos": [
+    { "descricao": "Sinal de Reserva da Agenda", "forma": "Pix", "valor": 1025, "pago": true },
+    { "descricao": "Saldo Final - Conclusão do Serviço", "forma": "Pix", "valor": 1025, "pago": true }
+  ]
+}

@@ -17,7 +17,7 @@ hb.registerHelper('diarias', (n: number) => `${n} ${n === 1 ? 'diária' : 'diár
 hb.registerHelper('Diarias', (n: number) => `${n} ${n === 1 ? 'Diária' : 'Diárias'}`);
 hb.registerHelper('listaDias', (dias: number[]) => dias.map((d) => String(d).padStart(2, '0')).join(', '));
 
-export type ModeloDocumento = 'orcamento-tecnico' | 'fatura-mensal';
+export type ModeloDocumento = 'orcamento-tecnico' | 'fatura-mensal' | 'recibo';
 
 const TIPOS_IMAGEM: Record<string, string> = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', svg: 'image/svg+xml', webp: 'image/webp' };
 

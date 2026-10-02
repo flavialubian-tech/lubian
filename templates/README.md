@@ -6,8 +6,7 @@ campos dinâmicos e gera o PDF mantendo o layout.
 | Arquivo | Documento | Status |
 |---|---|---|
 | `orcamento-tecnico.html` | Orçamento Técnico (Padrão Luva Branca) | ✅ pronto (original em `_original-orcamento-raissa.html`) |
-| `recibo-sinal.html` | Recibo de Sinal (Reserva de Agenda — 50%) | aguardando modelo |
-| `recibo-quitacao.html` | Recibo de Quitação (50% / 100%) | aguardando modelo |
+| `recibo.html` | Recibo de **Sinal** e de **Quitação** (mesmo modelo, `"tipo": "sinal"` ou `"quitacao"`) | ✅ pronto (original em `_original-recibo-quitacao-christian.pdf`) |
 | `fatura-mensal.html` | Fatura Mensal (contratos recorrentes) | ✅ pronto (original em `_original-fatura-katiane.html`) |
 | `checklist-handover.html` | Checklist / Termo de Entrega | aguardando modelo |
 
@@ -39,7 +38,12 @@ Regras do PDF do cliente:
 npm install
 npm run orcamento -- exemplos/orcamento-raissa.json saida/orcamento.pdf
 npm run fatura    -- exemplos/fatura-katiane.json  saida/fatura.pdf
+npm run recibo    -- exemplos/recibo-quitacao-christian.json saida/recibo-quitacao.pdf
+npm run recibo    -- exemplos/recibo-sinal-christian.json    saida/recibo-sinal.pdf
 ```
+
+Nos recibos, o valor por extenso e o texto da declaração são montados sozinhos.
+O recibo de quitação não é emitido se ainda houver parcela em aberto.
 
 A fatura calcula sozinha os dias do mês a partir dos dias da semana do contrato
 (ex.: seg/qua/sex em outubro/2026 = 13 diárias), abate as faltas e monta as duas opções

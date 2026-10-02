@@ -9,7 +9,8 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "orcamento": "tsx scripts/gerar-orcamento.ts",
-    "fatura": "tsx scripts/gerar-fatura.ts"
+    "fatura": "tsx scripts/gerar-fatura.ts",
+    "recibo": "tsx scripts/gerar-recibo.ts"
   },
   "repository": {
     "type": "git",
