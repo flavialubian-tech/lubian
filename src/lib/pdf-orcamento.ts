@@ -18,6 +18,7 @@ export async function htmlDoOrcamento(orc: Orcamento) {
     numero: orc.numero,
     emitidoEm: orc.enviadoEm ?? orc.atualizadoEm,
     validadeDias: orc.validadeDias,
+    datasPrevistas: orc.datasPrevistas,
     conteudo: orc.conteudo,
     resultado: orc.resultado,
   });

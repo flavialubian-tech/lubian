@@ -1,5 +1,6 @@
 /** Monta os dados que o template `orcamento-tecnico.html` espera. */
 import type { ConteudoOrcamento } from '@/db/schema';
+import { textoCronograma } from './agenda';
 import { distribuirValorTabela, type ResultadoOrcamento } from '@/precificacao';
 
 export interface EmpresaDocumento {
@@ -18,6 +19,8 @@ export function dadosDocumentoOrcamento(p: {
   numero: string;
   emitidoEm: Date;
   validadeDias: number;
+  /** Sem texto de cronograma, o PDF mostra as datas previstas. */
+  datasPrevistas?: string[];
   conteudo: ConteudoOrcamento;
   resultado: ResultadoOrcamento;
   selo?: string;
@@ -38,7 +41,7 @@ export function dadosDocumentoOrcamento(p: {
     },
     cliente: { nome: p.clienteNome },
     obra: { local: c.localTexto, area: c.areaTexto },
-    servico: { tipo: c.tipoServico, cronograma: c.cronograma, equipe: c.equipeTexto },
+    servico: { tipo: c.tipoServico, cronograma: c.cronograma.trim() || textoCronograma(p.datasPrevistas ?? []), equipe: c.equipeTexto },
     informacoes: { titulo: c.informacoes.titulo, itens: c.informacoes.itens.filter((i) => i.trim()) },
     parecer: c.parecer?.titulo.trim() || c.parecer?.texto.trim() ? c.parecer : null,
     escopo: escopoValido.map((item, i) => ({ ...item, itens: item.itens.filter((x) => x.trim()), valor: valores[i] })),

@@ -51,6 +51,7 @@ export async function estadoInicialNovo(empresaId: string, opcoes: OpcoesEditor,
     servicoId,
     vistoriaId: vistoria?.id ?? null,
     validadeDias: 7,
+    datasPrevistas: [],
     precificacao: {
       equipe: lider ? [{ nome: lider.nome, diaria: lider.diaria, dias: 1 }] : [],
       custosVariaveis: {},

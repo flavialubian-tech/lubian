@@ -1,7 +1,7 @@
 import { unstable_rethrow } from 'next/navigation';
 import { ZodError } from 'zod';
 import type { EstadoForm } from '@/components/formulario';
-import { ErroNegocio } from './orcamentos';
+import { ErroNegocio } from './erros';
 
 /** Executa uma Server Action e transforma erros esperados em mensagem para o formulário. */
 export async function executarAcao(fn: () => Promise<EstadoForm | void>): Promise<EstadoForm> {

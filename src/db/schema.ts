@@ -5,11 +5,13 @@
 import { relations } from 'drizzle-orm';
 import {
   boolean,
+  date,
   integer,
   jsonb,
   numeric,
   pgEnum,
   pgTable,
+  index,
   primaryKey,
   text,
   timestamp,
@@ -31,6 +33,10 @@ export const perfilEnum = pgEnum('perfil', ['gestao', 'administrativo', 'lider',
 export const tipoClienteEnum = pgEnum('tipo_cliente', ['pessoa_fisica', 'arquiteto', 'construtora', 'empresa', 'imobiliaria']);
 export const funcaoEquipeEnum = pgEnum('funcao_equipe', ['lider', 'auxiliar']);
 export const statusOrcamentoEnum = pgEnum('status_orcamento', ['rascunho', 'enviado', 'aprovado', 'recusado']);
+export const statusAlocacaoEnum = pgEnum('status_alocacao', ['pre_reserva', 'confirmada', 'concluida', 'cancelada']);
+export const presencaEnum = pgEnum('presenca', ['presente', 'falta']);
+export const tipoPagamentoEnum = pgEnum('tipo_pagamento', ['sinal', 'saldo']);
+export const formaPagamentoEnum = pgEnum('forma_pagamento', ['pix', 'dinheiro', 'cartao', 'transferencia']);
 
 export const empresas = pgTable('empresas', {
   id: id(),
@@ -197,6 +203,8 @@ export const orcamentos = pgTable(
     resultado: jsonb('resultado').$type<ResultadoOrcamento>().notNull(),
     valorFinal: dinheiro('valor_final').notNull(),
     validadeDias: integer('validade_dias').notNull().default(7),
+    /** Dias de execução previstos ('AAAA-MM-DD'); viram as alocações da agenda na aprovação. */
+    datasPrevistas: jsonb('datas_previstas').$type<string[]>().notNull().default([]),
     /** Liberação da gestão para markup abaixo do mínimo. */
     liberadoPorId: uuid('liberado_por_id').references(() => usuarios.id),
     justificativaLiberacao: text('justificativa_liberacao'),
@@ -206,6 +214,8 @@ export const orcamentos = pgTable(
     aprovadoIp: text('aprovado_ip'),
     recusadoEm: timestamp('recusado_em', { withTimezone: true }),
     motivoRecusa: text('motivo_recusa'),
+    /** Botão "Serviço entregue" (libera a quitação). */
+    entregueEm: timestamp('entregue_em', { withTimezone: true }),
     criadoPorId: uuid('criado_por_id').references(() => usuarios.id),
     criadoEm: criadoEm(),
     atualizadoEm: timestamp('atualizado_em', { withTimezone: true }).notNull().defaultNow(),
@@ -236,6 +246,56 @@ export const numeracao = pgTable(
   },
   (t) => [primaryKey({ columns: [t.empresaId, t.tipo, t.ano] })],
 );
+
+/** Um profissional escalado em um dia de um serviço aprovado. */
+export const alocacoes = pgTable(
+  'alocacoes',
+  {
+    id: id(),
+    empresaId: empresaId(),
+    orcamentoId: uuid('orcamento_id')
+      .notNull()
+      .references(() => orcamentos.id, { onDelete: 'cascade' }),
+    obraId: uuid('obra_id')
+      .notNull()
+      .references(() => obras.id),
+    membroEquipeId: uuid('membro_equipe_id')
+      .notNull()
+      .references(() => equipe.id),
+    data: date('data', { mode: 'string' }).notNull(),
+    status: statusAlocacaoEnum('status').notNull().default('pre_reserva'),
+    presenca: presencaEnum('presenca'),
+    criadoEm: criadoEm(),
+  },
+  (t) => [index('alocacoes_data_idx').on(t.empresaId, t.data)],
+);
+
+/** Folgas, feriados e indisponibilidades. Sem profissional = empresa toda. */
+export const bloqueios = pgTable('bloqueios', {
+  id: id(),
+  empresaId: empresaId(),
+  membroEquipeId: uuid('membro_equipe_id').references(() => equipe.id),
+  dataInicio: date('data_inicio', { mode: 'string' }).notNull(),
+  dataFim: date('data_fim', { mode: 'string' }).notNull(),
+  motivo: text('motivo').notNull(),
+  criadoEm: criadoEm(),
+});
+
+export const pagamentos = pgTable('pagamentos', {
+  id: id(),
+  empresaId: empresaId(),
+  orcamentoId: uuid('orcamento_id')
+    .notNull()
+    .references(() => orcamentos.id),
+  tipo: tipoPagamentoEnum('tipo').notNull(),
+  valor: dinheiro('valor').notNull(),
+  forma: formaPagamentoEnum('forma').notNull(),
+  pagoEm: date('pago_em', { mode: 'string' }).notNull(),
+  /** Chave do arquivo do comprovante (src/lib/arquivos.ts). */
+  comprovante: text('comprovante'),
+  registradoPorId: uuid('registrado_por_id').references(() => usuarios.id),
+  criadoEm: criadoEm(),
+});
 
 export const clientesRelations = relations(clientes, ({ many, one }) => ({
   obras: many(obras),

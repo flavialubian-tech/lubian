@@ -8,10 +8,13 @@ import { z } from 'zod';
 import { db, schema } from '@/db';
 import type { ConteudoOrcamento } from '@/db/schema';
 import { calcularOrcamento, MARKUP_MINIMO_PADRAO, type EntradaOrcamento } from '@/precificacao';
+import { normalizarDatas } from './agenda';
+import { ErroNegocio } from './erros';
 import { situacaoNoFunil } from './funil';
+import { criarPreReservas, registrarEvento } from './operacao';
 import { proximoNumero } from './numeracao';
 
-export class ErroNegocio extends Error {}
+export { ErroNegocio };
 
 const texto = z.string().trim();
 const textoOpcional = z.string().trim().default('');
@@ -60,6 +63,7 @@ export const salvarOrcamentoSchema = z.object({
   servicoId: z.string().uuid().nullable(),
   vistoriaId: z.string().uuid().nullable(),
   validadeDias: z.coerce.number().int().min(1).max(90),
+  datasPrevistas: z.array(z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Data inválida')).default([]),
   precificacao: entradaPrecificacaoSchema,
   conteudo: conteudoSchema,
 });
@@ -68,10 +72,6 @@ export type SalvarOrcamentoInput = z.input<typeof salvarOrcamentoSchema>;
 interface Contexto {
   empresaId: string;
   usuarioId: string;
-}
-
-async function registrarEvento(orcamentoId: string, usuarioId: string | null, tipo: string, descricao?: string) {
-  await db.insert(schema.orcamentoEventos).values({ orcamentoId, usuarioId, tipo, descricao });
 }
 
 async function buscar(ctx: Contexto, id: string) {
@@ -111,6 +111,7 @@ export async function salvarOrcamento(ctx: Contexto, id: string | null, entrada:
     servicoId: dados.servicoId,
     vistoriaId: dados.vistoriaId,
     validadeDias: dados.validadeDias,
+    datasPrevistas: normalizarDatas(dados.datasPrevistas),
     precificacao,
     conteudo: dados.conteudo,
     resultado,
@@ -199,7 +200,18 @@ export async function aprovarPeloCliente(token: string, ip: string | null) {
   }
   await db.update(schema.orcamentos).set({ status: 'aprovado', aprovadoEm: new Date(), aprovadoIp: ip }).where(eq(schema.orcamentos.id, orc.id));
   await registrarEvento(orc.id, null, 'aprovado', 'Aprovado pelo cliente no link');
+  await criarPreReservas(orc.empresaId, orc.id);
   return orc.id;
+}
+
+/** Aprovação registrada pela equipe (cliente aprovou por WhatsApp, telefone…). */
+export async function aprovarManualmente(ctx: Contexto, id: string) {
+  const orc = await buscar(ctx, id);
+  if (orc.status === 'aprovado') throw new ErroNegocio('Orçamento já aprovado');
+  if (orc.status !== 'enviado') throw new ErroNegocio('Só um orçamento enviado pode ser aprovado');
+  await db.update(schema.orcamentos).set({ status: 'aprovado', aprovadoEm: new Date() }).where(eq(schema.orcamentos.id, id));
+  await registrarEvento(id, ctx.usuarioId, 'aprovado', 'Aprovação registrada pela equipe');
+  await criarPreReservas(ctx.empresaId, id);
 }
 
 /** Data do último follow-up de cada orçamento (para os lembretes do funil). */

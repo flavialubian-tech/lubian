@@ -10,6 +10,7 @@ export default async function LayoutSistema({ children }: { children: React.Reac
   const sessao = await exigirOperador();
   const itens: ItemMenu[] = [
     { href: '/', rotulo: 'Painel' },
+    { href: '/agenda', rotulo: 'Agenda' },
     { href: '/orcamentos', rotulo: 'Orçamentos' },
     { href: '/vistorias', rotulo: 'Vistorias' },
     { href: '/clientes', rotulo: 'Clientes' },
@@ -17,6 +18,7 @@ export default async function LayoutSistema({ children }: { children: React.Reac
     { href: '/equipe', rotulo: 'Equipe' },
     { href: '/servicos', rotulo: 'Serviços' },
     { href: '/pre-qualificacao', rotulo: 'Pré-qualificação' },
+    ...(sessao.membroEquipeId ? [{ href: '/minha-semana', rotulo: 'Minha semana' }] : []),
     ...(sessao.perfil === 'gestao' ? [{ href: '/usuarios', rotulo: 'Usuários' }] : []),
   ];
 

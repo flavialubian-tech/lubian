@@ -2,8 +2,10 @@
 
 import { useRouter } from 'next/navigation';
 import { useMemo, useState, useTransition, type ReactNode } from 'react';
+import { SeletorDatas } from '@/components/seletor-datas';
 import { AreaTexto, Botao, Campo, Cartao, Rotulo, Selecao, cx } from '@/components/ui';
 import type { ConteudoOrcamento } from '@/db/schema';
+import { textoCronograma } from '@/lib/agenda';
 import { moeda, percentual } from '@/lib/formato';
 import type { SalvarOrcamentoInput } from '@/lib/orcamentos';
 import { calcularOrcamento, distribuirValorTabela, MARKUP_MINIMO_PADRAO, type EntradaOrcamento } from '@/precificacao';
@@ -21,6 +23,7 @@ export interface EstadoEditor {
   servicoId: string | null;
   vistoriaId: string | null;
   validadeDias: number;
+  datasPrevistas: string[];
   precificacao: EntradaOrcamento;
   conteudo: ConteudoOrcamento;
 }
@@ -139,6 +142,9 @@ export function EditorOrcamento({ id, inicial, opcoes, somenteLeitura }: { id: s
               ))}
             </Selecao>
             <CampoNumero rotulo="Validade (dias)" valor={estado.validadeDias} aoMudar={(n) => set({ validadeDias: Math.round(n) })} />
+            <div className="sm:col-span-2">
+              <SeletorDatas datas={estado.datasPrevistas} aoMudar={(datasPrevistas) => set({ datasPrevistas })} />
+            </div>
           </div>
         </Cartao>
 
@@ -260,7 +266,7 @@ export function EditorOrcamento({ id, inicial, opcoes, somenteLeitura }: { id: s
         <Cartao titulo="5. Apresentação técnica (o que vai no PDF)">
           <div className="grid gap-4 sm:grid-cols-2">
             <Campo rotulo="Tipo de serviço" value={c.tipoServico} onChange={(e) => setC({ tipoServico: e.target.value })} />
-            <Campo rotulo="Cronograma" value={c.cronograma} onChange={(e) => setC({ cronograma: e.target.value })} placeholder="02 Dias (Sábado e Domingo)" />
+            <Campo rotulo="Cronograma" value={c.cronograma} onChange={(e) => setC({ cronograma: e.target.value })} placeholder={textoCronograma(estado.datasPrevistas) || '02 Dias (Sábado e Domingo)'} />
             <Campo rotulo="Local" value={c.localTexto} onChange={(e) => setC({ localTexto: e.target.value })} />
             <Campo rotulo="Área de intervenção" value={c.areaTexto} onChange={(e) => setC({ areaTexto: e.target.value })} placeholder="140 m²" />
             <Campo rotulo="Equipe" value={c.equipeTexto} onChange={(e) => setC({ equipeTexto: e.target.value })} />

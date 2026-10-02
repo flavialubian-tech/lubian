@@ -18,6 +18,8 @@ export interface Sessao {
   nome: string;
   email: string;
   perfil: Perfil;
+  /** Profissional da equipe ligado ao usuário (para "Minha semana"). */
+  membroEquipeId: string | null;
 }
 
 export async function criarSessao(usuarioId: string) {
@@ -51,6 +53,7 @@ export const obterSessao = cache(async (): Promise<Sessao | null> => {
       nome: schema.usuarios.nome,
       email: schema.usuarios.email,
       perfil: schema.usuarios.perfil,
+      membroEquipeId: schema.usuarios.membroEquipeId,
       ativo: schema.usuarios.ativo,
     })
     .from(schema.sessoes)

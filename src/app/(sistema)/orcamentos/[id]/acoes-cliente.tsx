@@ -72,3 +72,41 @@ export function CopiarLink({ url }: { url: string }) {
     </div>
   );
 }
+
+/** Botão que executa uma Server Action sem formulário e atualiza a tela. */
+export function BotaoAcao({
+  acao,
+  rotulo,
+  variante = 'secundario',
+  confirmar,
+}: {
+  acao: () => Promise<{ erro?: string; ok?: string } | undefined>;
+  rotulo: string;
+  variante?: 'primario' | 'secundario' | 'perigo' | 'sucesso';
+  confirmar?: string;
+}) {
+  const router = useRouter();
+  const [pendente, iniciar] = useTransition();
+  const [erro, setErro] = useState<string>();
+  return (
+    <div>
+      <Botao
+        type="button"
+        variante={variante}
+        className="w-full"
+        disabled={pendente}
+        onClick={() => {
+          if (confirmar && !window.confirm(confirmar)) return;
+          iniciar(async () => {
+            const r = await acao();
+            setErro(r?.erro);
+            router.refresh();
+          });
+        }}
+      >
+        {pendente ? 'Registrando…' : rotulo}
+      </Botao>
+      {erro && <p className="mt-2 text-sm text-vermelho">{erro}</p>}
+    </div>
+  );
+}

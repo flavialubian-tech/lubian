@@ -1,14 +1,18 @@
 /**
  * Teste de ponta a ponta no navegador, contra um servidor rodando (npm run dev).
  *   BASE_URL=http://localhost:3000 npm run teste:e2e
- * Percorre: login → cliente → obra → vistoria → orçamento → envio → aprovação do cliente.
+ * Percorre: login → cliente → obra → vistoria → orçamento → envio → aprovação do cliente →
+ * pré-reserva na agenda → sinal registrado → agenda confirmada → "Minha semana" do Anderson.
  */
 import { mkdir } from 'node:fs/promises';
 import { chromium, type Page } from 'playwright-core';
+import { hojeSP, somarDias } from '../src/lib/agenda';
 
 const BASE = process.env.BASE_URL ?? 'http://localhost:3000';
 const SAIDA = 'saida/e2e';
 const sufixo = Date.now().toString().slice(-5);
+const obraNome = `Apto ${sufixo}`;
+const amanha = somarDias(hojeSP(), 1);
 await mkdir(SAIDA, { recursive: true });
 
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined });
@@ -48,7 +52,8 @@ try {
   await passo('cadastrar obra', async () => {
     await page.click('a:has-text("+ Obra")');
     await page.waitForURL(/\/obras\/nova/);
-    await page.fill('input[name=nome]', `Apto ${sufixo}`);
+    await page.fill('input[name=nome]', obraNome);
+    await page.fill('input[name=endereco]', 'Rua Marechal Deodoro, 100 - Chapecó/SC');
     await page.fill('input[name=areaM2]', '95');
     await page.click('button:has-text("Cadastrar obra")');
     await page.waitForURL(/\/obras\/[0-9a-f-]{36}$/);
@@ -77,6 +82,10 @@ try {
     await dias.fill('2');
     await page.locator('input[inputmode=decimal]').nth(3).fill('80'); // transporte
     await page.fill('input[placeholder="Item 1: título"]', 'Detalhamento de esquadrias e vidros');
+    // Datas previstas: amanhã e depois de amanhã
+    await page.fill('#nova-data', amanha);
+    await page.click('button:has-text("Adicionar data")');
+    await page.click('button:has-text("+ dia seguinte")');
     await foto(page, '03-editor');
     await page.click('button:has-text("Criar orçamento")');
     await page.waitForURL(/\/orcamentos\/[0-9a-f-]{36}$/);
@@ -108,7 +117,43 @@ try {
 
   await passo('status aprovado no sistema', async () => {
     await page.reload();
-    await page.getByText('✓ Aprovado pelo cliente').waitFor();
+    await page.getByText('✓ Aprovado em').waitFor();
+    await page.getByText('Agenda, sinal e entrega').waitFor();
+  });
+
+  const chip = (status: string) => page.locator(`[data-grade] a[data-status=${status}]`, { hasText: obraNome }).first();
+
+  await passo('pré-reserva na agenda', async () => {
+    await page.goto(`${BASE}/agenda?data=${amanha}`);
+    await chip('pre_reserva').waitFor();
+    await foto(page, '06-agenda-pre-reserva');
+  });
+
+  await passo('registrar sinal pago', async () => {
+    await page.goto(urlOrcamento);
+    await page.click('button:has-text("Registrar sinal pago")');
+    await page.getByText('✓ Sinal pago').waitFor();
+  });
+
+  await passo('agenda confirmada', async () => {
+    await page.goto(`${BASE}/agenda?data=${amanha}`);
+    await chip('confirmada').waitFor();
+    if (await chip('pre_reserva').count()) throw new Error('Ainda há pré-reserva após o sinal');
+    await foto(page, '07-agenda-confirmada');
+  });
+
+  await passo('Anderson vê em "Minha semana"', async () => {
+    const anderson = await (await browser.newContext({ viewport: { width: 390, height: 844 } })).newPage();
+    await anderson.goto(`${BASE}/login`);
+    await anderson.fill('input[name=email]', 'anderson@lubian.local');
+    await anderson.fill('input[name=senha]', process.env.SENHA_INICIAL ?? 'lubian2026');
+    await anderson.click('button[type=submit]');
+    await anderson.waitForURL(`${BASE}/minha-semana`);
+    const card = anderson.locator(`[data-obra="${obraNome}"]`).first();
+    await card.waitFor();
+    await card.getByText('Confirmada').waitFor();
+    await card.getByText('abrir no Maps').waitFor();
+    await foto(anderson, '08-minha-semana');
   });
 
   await passo('auxiliar não acessa o sistema', async () => {

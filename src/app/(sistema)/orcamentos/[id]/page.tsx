@@ -12,9 +12,10 @@ import { dataCurta, dataHora, linkWhatsApp, moeda } from '@/lib/formato';
 import { mensagemEnvioOrcamento, mensagemFollowUp } from '@/lib/mensagens';
 import { ehGestao } from '@/lib/permissoes';
 import { urlBase } from '@/lib/url';
-import { followUpAcao, liberarAcao, recusarAcao } from '../actions';
+import { aprovarManualAcao, followUpAcao, liberarAcao, recusarAcao } from '../actions';
 import { EditorOrcamento } from '../editor';
-import { BotaoEnviarWhatsApp, BotaoMarcarEnviado, CopiarLink } from './acoes-cliente';
+import { BotaoAcao, BotaoEnviarWhatsApp, BotaoMarcarEnviado, CopiarLink } from './acoes-cliente';
+import { CartaoOperacao } from './operacao';
 
 const NOMES_EVENTO: Record<string, string> = {
   criado: 'Criado',
@@ -24,6 +25,9 @@ const NOMES_EVENTO: Record<string, string> = {
   aprovado: 'Aprovado',
   recusado: 'Recusado',
   liberacao_markup: 'Liberação de markup (Gestão)',
+  agenda: 'Agenda',
+  sinal_pago: 'Sinal pago',
+  entregue: 'Serviço entregue',
 };
 
 export default async function Orcamento(props: PageProps<'/orcamentos/[id]'>) {
@@ -79,8 +83,8 @@ export default async function Orcamento(props: PageProps<'/orcamentos/[id]'>) {
         <Cartao titulo="Enviar ao cliente">
           {orc.status === 'aprovado' ? (
             <div className="space-y-1 text-sm">
-              <p className="font-semibold text-verde">✓ Aprovado pelo cliente em {dataHora(orc.aprovadoEm)}</p>
-              <p className="text-cinza">Pré-reserva da agenda. A data só é confirmada após o Pix de 50% de sinal ({moeda(r.sinal)}).</p>
+              <p className="font-semibold text-verde">✓ Aprovado em {dataHora(orc.aprovadoEm)}</p>
+              <p className="text-cinza">A agenda fica em pré-reserva e só é confirmada após o Pix de 50% de sinal ({moeda(r.sinal)}).</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -97,6 +101,13 @@ export default async function Orcamento(props: PageProps<'/orcamentos/[id]'>) {
                 rotulo={orc.status === 'rascunho' ? 'Enviar pelo WhatsApp' : 'Reenviar (renova a validade)'}
               />
               {orc.status === 'rascunho' && <BotaoMarcarEnviado id={orc.id} bloqueado={bloqueado} />}
+              {orc.status === 'enviado' && (
+                <BotaoAcao
+                  acao={aprovarManualAcao.bind(null, orc.id)}
+                  rotulo="Registrar aprovação (cliente aprovou por mensagem)"
+                  confirmar="O cliente aprovou este orçamento? A agenda entra em pré-reserva."
+                />
+              )}
               {orc.enviadoEm && (
                 <p className="text-xs text-cinza">
                   Enviado em {dataCurta(orc.enviadoEm)} · válido até {dataCurta(dataExpiracao(orc.enviadoEm, orc.validadeDias))}
@@ -164,6 +175,8 @@ export default async function Orcamento(props: PageProps<'/orcamentos/[id]'>) {
         </Cartao>
       </div>
 
+      {orc.status === 'aprovado' && <CartaoOperacao orc={orc} />}
+
       <EditorOrcamento
         id={orc.id}
         somenteLeitura={orc.status === 'aprovado'}
@@ -174,6 +187,7 @@ export default async function Orcamento(props: PageProps<'/orcamentos/[id]'>) {
           servicoId: orc.servicoId,
           vistoriaId: orc.vistoriaId,
           validadeDias: orc.validadeDias,
+          datasPrevistas: orc.datasPrevistas,
           precificacao: orc.precificacao,
           conteudo: orc.conteudo,
         }}
