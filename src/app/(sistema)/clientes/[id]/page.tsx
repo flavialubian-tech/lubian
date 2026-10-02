@@ -1,6 +1,7 @@
 import { and, asc, eq } from 'drizzle-orm';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { BotaoExcluir } from '@/components/botao-excluir';
 import { StatusOrcamento } from '@/components/status-orcamento';
 import { BotaoLink, Cabecalho, Cartao, Selo, Vazio } from '@/components/ui';
 import { db, schema } from '@/db';
@@ -40,6 +41,14 @@ export default async function Cliente(props: PageProps<'/clientes/[id]'>) {
             <BotaoLink href={`/obras/nova?cliente=${cliente.id}`} variante="secundario">
               + Obra
             </BotaoLink>
+            <BotaoExcluir
+              tipo="cliente"
+              id={cliente.id}
+              voltarPara="/clientes"
+              rotulo="Excluir cliente"
+              confirmar={`Excluir o cliente ${cliente.nome}, com as obras e vistorias dele?`}
+              className="self-center"
+            />
           </>
         }
       />

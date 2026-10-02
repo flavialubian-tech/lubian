@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { BotaoExcluir } from '@/components/botao-excluir';
 import { BotaoLink, Cabecalho, Cartao, Selo, Tabela, Vazio, cx } from '@/components/ui';
 import { hojeSP } from '@/lib/agenda';
 import { exigirOperador } from '@/lib/auth';
@@ -185,7 +186,8 @@ export default async function Financeiro(props: PageProps<'/financeiro'>) {
                     <a href={`/api/comprovantes/${p.id}`} target="_blank" className="text-xs font-semibold text-azul hover:underline">
                       comprovante
                     </a>
-                  )}
+                  )}{' '}
+                  <BotaoExcluir tipo="pagamento" id={p.id} confirmar={"Excluir este pagamento lançado por engano? O recibo deixa de valer, a cobrança volta para \"em aberto\" e, se for o sinal, a agenda volta para pré-reserva."} className="ml-2" />
                 </td>
               </tr>
             ))}

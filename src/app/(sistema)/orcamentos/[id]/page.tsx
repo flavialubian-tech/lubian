@@ -1,6 +1,7 @@
 import { and, asc, eq } from 'drizzle-orm';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { BotaoExcluir } from '@/components/botao-excluir';
 import { Formulario } from '@/components/formulario';
 import { StatusOrcamento } from '@/components/status-orcamento';
 import { AreaTexto, Botao, BotaoLink, Cabecalho, Campo, Cartao } from '@/components/ui';
@@ -80,6 +81,14 @@ export default async function Orcamento(props: PageProps<'/orcamentos/[id]'>) {
             <BotaoLink href={`/api/orcamentos/${orc.id}/pdf`} target="_blank" variante="secundario">
               Baixar PDF
             </BotaoLink>
+            <BotaoExcluir
+              tipo="orcamento"
+              id={orc.id}
+              voltarPara="/orcamentos"
+              rotulo="Excluir orçamento"
+              confirmar={`Excluir o orçamento ${orc.numero}? Saem junto a agenda, as cobranças, os pagamentos (com comprovantes) e as despesas desta obra.`}
+              className="self-center"
+            />
           </>
         }
       />

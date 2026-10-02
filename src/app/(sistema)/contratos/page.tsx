@@ -1,4 +1,5 @@
 import { asc, eq } from 'drizzle-orm';
+import { BotaoExcluir } from '@/components/botao-excluir';
 import { Formulario } from '@/components/formulario';
 import { Botao, BotaoLink, Cabecalho, Caixa, Campo, Cartao, Selecao, Selo, Vazio } from '@/components/ui';
 import { db, schema } from '@/db';
@@ -86,7 +87,13 @@ export default async function Contratos() {
               <span className="text-sm text-cinza">
                 {c.diasSemana.map((d) => NOMES_DIA_SEMANA[d].slice(0, 3)).join(', ')} · {moeda(c.diariaBase)}
                 {Number(c.descontoAntecipacao) > 0 && ` −${percentual(Number(c.descontoAntecipacao))} Pix`}
-                {c.diariaEspecie && ` · ${moeda(c.diariaEspecie)} espécie`}
+                {c.diariaEspecie && ` · ${moeda(c.diariaEspecie)} espécie`}{' '}
+                <BotaoExcluir
+                  tipo="contrato"
+                  id={c.id}
+                  confirmar={`Excluir o contrato de ${clienteNome} (${obraNome})? Saem junto todas as faturas e pagamentos dele.`}
+                  rotulo="Excluir contrato"
+                />
               </span>
             }
           >
@@ -126,6 +133,7 @@ export default async function Contratos() {
                           <BotaoLink href={linkWhatsApp(clienteTelefone, msg)} target="_blank" variante="sucesso" className="px-3 py-1">
                             WhatsApp
                           </BotaoLink>
+                          <BotaoExcluir tipo="fatura" id={f.id} confirmar={`Excluir a fatura ${f.numero}? Sai junto o pagamento dela, se houver.`} />
                         </div>
                       </li>
                     );

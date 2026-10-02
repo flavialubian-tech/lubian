@@ -1,4 +1,5 @@
 import { asc, eq } from 'drizzle-orm';
+import { BotaoExcluir } from '@/components/botao-excluir';
 import { Formulario } from '@/components/formulario';
 import { AreaTexto, Botao, Cabecalho, Caixa, Campo, Cartao, Selo } from '@/components/ui';
 import { db, schema } from '@/db';
@@ -38,7 +39,11 @@ export default async function Servicos() {
       />
       <div className="space-y-4">
         {lista.map((s) => (
-          <Cartao key={s.id} titulo={<span className="flex items-center gap-2">{s.nome}{!s.ativo && <Selo>Inativo</Selo>}</span>}>
+          <Cartao
+            key={s.id}
+            titulo={<span className="flex items-center gap-2">{s.nome}{!s.ativo && <Selo>Inativo</Selo>}</span>}
+            acoes={<BotaoExcluir tipo="servico" id={s.id} confirmar={`Excluir o serviço "${s.nome}" do catálogo? Orçamentos já feitos com ele não mudam.`} />}
+          >
             <FormServico s={s} />
           </Cartao>
         ))}
