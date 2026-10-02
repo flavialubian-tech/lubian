@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { extname, join } from 'node:path';
 import Handlebars from 'handlebars';
 import { chromium } from 'playwright-core';
+import { caminhoNavegador } from './navegador';
 
 // Caminhos relativos à raiz do projeto (de onde o servidor e os scripts rodam).
 const RAIZ = process.cwd();
@@ -39,8 +40,13 @@ export async function renderizarHtml(
 }
 
 export async function gerarPdf(html: string): Promise<Buffer> {
-  const browser = await chromium.launch({
-    executablePath: process.env.CHROMIUM_PATH || undefined,
+  const executablePath = caminhoNavegador();
+  const browser = await chromium.launch({ executablePath }).catch((erro: Error) => {
+    throw new Error(
+      `Não foi possível abrir o navegador para gerar o PDF (${executablePath ?? 'padrão do Playwright'}). ` +
+        'Instale o Google Chrome ou informe CHROMIUM_PATH no arquivo .env.local.',
+      { cause: erro },
+    );
   });
   try {
     const page = await browser.newPage();

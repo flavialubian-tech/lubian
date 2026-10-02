@@ -5,6 +5,7 @@ import { cobrarSinal, diaMes, hojeSP, nomeDia, somarDias } from '@/lib/agenda';
 import { exigirOperador } from '@/lib/auth';
 import { listarOrcamentos } from '@/lib/consultas';
 import { dataCurta, linkWhatsApp, moeda, percentual } from '@/lib/formato';
+import { avisoBackup } from '@/lib/modo-local';
 import { listarAlocacoes, listarSinaisPendentes } from '@/lib/operacao';
 
 export const metadata = { title: 'Painel' };
@@ -12,10 +13,11 @@ export const metadata = { title: 'Painel' };
 export default async function Painel() {
   const sessao = await exigirOperador();
   const hoje = hojeSP();
-  const [todos, sinais, proximas] = await Promise.all([
+  const [todos, sinais, proximas, backup] = await Promise.all([
     listarOrcamentos(sessao.empresaId),
     listarSinaisPendentes(sessao.empresaId),
     listarAlocacoes(sessao.empresaId, hoje, somarDias(hoje, 6)),
+    avisoBackup(),
   ]);
   const sinaisCobrar = sinais.filter((o) => cobrarSinal({ aprovadoEm: o.aprovadoEm, sinalPago: false }));
   // Próximos serviços: um por obra e dia, com a equipe escalada.
@@ -45,6 +47,10 @@ export default async function Painel() {
         subtitulo="Resumo comercial da Lubian Limpezas"
         acoes={<BotaoLink href="/orcamentos/novo">+ Novo orçamento</BotaoLink>}
       />
+
+      {backup && (
+        <p className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-vermelho">⚠️ {backup}</p>
+      )}
 
       <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
         {indicadores.map((i) => (

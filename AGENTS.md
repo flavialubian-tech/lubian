@@ -11,9 +11,10 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 # Lubian Gestão — convenções do projeto
 
 - Idioma do domínio: português (nomes de tabelas, funções, telas). Escopo e decisões em `docs/ESCOPO.md`.
-- Regras de negócio puras e testadas em `src/precificacao.ts`, `src/fatura.ts`, `src/recibo.ts`, `src/extenso.ts`, `src/lib/funil.ts`, `src/lib/agenda.ts` (`npm test`).
+- Regras de negócio puras e testadas em `src/precificacao.ts`, `src/fatura.ts`, `src/recibo.ts`, `src/extenso.ts`, `src/lib/funil.ts`, `src/lib/agenda.ts`, `src/lib/backup.ts` (`npm test`).
 - Banco: Drizzle + PostgreSQL (`src/db/schema.ts`). Sem `DATABASE_URL` usa PGlite em `.data/pglite`.
   Depois de mudar o schema: `npm run db:gerar` e `npm run db:migrar`.
 - Multiempresa: toda consulta filtra por `empresaId` da sessão. Toda Server Action verifica a sessão (`exigirOperador`/`exigirGestao`).
 - Documentos PDF: templates Handlebars em `templates/`, renderizados com Chromium (`src/pdf/gerar-documento.ts`).
+- Modo local (Windows, sem nuvem): `iniciar-lubian.bat` → `scripts/iniciar.ts`; backup/restauração em `scripts/lib/backup-local.ts`. Guia: `docs/OPERACAO.md`.
 - Teste de ponta a ponta: com `npm run dev` rodando, `npm run teste:e2e`.

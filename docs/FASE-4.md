@@ -23,7 +23,9 @@ descarta funções serverless pequenas. **Recomendação: Google Cloud Run** (co
 Qualquer contêiner serve: a especificação abaixo não depende da escolha (só o passo "criar o serviço" muda).
 Se ficar com o **Render Free**, gerar os PDFs um de cada vez (fila simples em memória) e medir o pico de memória.
 
-## Parte L — Modo local: rodar no computador da Lubian, sem nada online (opção zero)
+## Parte L — Modo local: rodar no computador da Lubian, sem nada online (opção zero) ✅
+Computador da Lubian: **Windows 10**. Implementado — guia de uso em `docs/OPERACAO.md`.
+
 O sistema **já roda inteiro no computador**: banco PGlite em `.data/pglite`, fotos e comprovantes em
 `.data/arquivos`, PDFs com o Chrome/Edge instalado. Não precisa de Supabase, hospedagem, domínio nem cartão.
 Internet só é necessária **uma vez**, na instalação (Node.js e `npm install`); depois funciona desconectado.
@@ -37,22 +39,21 @@ Internet só é necessária **uma vez**, na instalação (Node.js e `npm install
 | — | Asaas (baixa automática) **não funciona** — o aviso de pagamento precisa chegar pela internet. Baixa manual |
 | — | Se o computador estragar ou for roubado, perde tudo **sem backup** → backup é obrigatório |
 
-### O que implementar
-- **Iniciar com dois cliques**: `iniciar-lubian.bat` (Windows) e `iniciar-lubian.command` (Mac), na raiz:
-  roda `npm run build` só se o código mudou, depois `npm start -- -H 0.0.0.0 -p 3000` e abre o navegador.
-  Opcional: atalho na pasta "Inicializar" do Windows para subir junto com o computador.
-- **Chromium**: usar o navegador já instalado — `CHROMIUM_PATH` padrão detectado
-  (`C:\Program Files\Google\Chrome\Application\chrome.exe`, Edge em `C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe`,
-  `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`); se nenhum existir, mensagem clara na tela.
-- **Endereço para os celulares**: tela `/minha-conta` (Gestão) mostra o endereço na rede local (IP do computador
-  + porta) com QR Code para abrir no celular. `APP_URL` fica sem definir (o sistema usa o endereço de quem acessou).
+### O que foi implementado
+- **Iniciar com dois cliques**: `iniciar-lubian.bat` → `npm run iniciar` (`scripts/iniciar.ts`): backup do dia,
+  `db:semear` (migra e, na 1ª vez, cria os dados), `npm run build` só se o código mudou, `next start -H 0.0.0.0`
+  e abre o navegador. `atualizar-lubian.bat`: `git pull` + `npm install`.
+- **Chromium**: `src/pdf/navegador.ts` usa `CHROMIUM_PATH` ou detecta o Chrome/Edge instalados; sem nenhum,
+  mensagem clara na tela.
+- **Endereço para os celulares**: tela `/minha-conta` mostra o endereço na rede local (IP do computador
+  + porta) com QR Code para abrir no celular (`src/lib/modo-local.ts`, `src/lib/rede.ts`). `APP_URL` fica sem definir (o sistema usa o endereço de quem acessou).
   Dica no `docs/OPERACAO.md`: fixar o IP do computador no roteador (reserva DHCP) para o endereço não mudar.
 - **Firewall**: na 1ª vez o Windows pergunta se libera o Node.js na rede — marcar **rede privada**.
-- **Backup local** — `npm run backup` (e automático ao iniciar, 1×/dia):
-  exporta o banco com `PGlite.dumpDataDir()` (sem precisar parar o sistema) + copia `.data/arquivos`,
-  compacta em `lubian-AAAA-MM-DD.zip` dentro de `BACKUP_DIR` (pendrive/HD externo, ou a pasta do Google Drive
+- **Backup local** — automático ao iniciar (1×/dia) e `npm run backup` com o sistema fechado
+  (o PGlite não abre em dois processos): `PGlite.dumpDataDir('gzip')` → `banco.tar.gz` + cópia de `.data/arquivos`
+  na pasta `lubian-AAAA-MM-DD` dentro de `BACKUP_DIR` (pendrive/HD externo, ou a pasta do Google Drive
   para computador, se quiser uma cópia fora de casa). Mantém 30 diários + 12 mensais. `npm run restaurar <arquivo>`
-  volta um backup (testar uma vez).
+  volta um backup, guardando os dados atuais em `.data/*-antes-*`. Regras de retenção puras em `src/lib/backup.ts`.
   Aviso no painel quando o último backup tiver mais de 3 dias.
 - **Segurança**: só o computador tem os dados → senha no Windows/Mac, trocar as senhas iniciais dos usuários.
   O sistema não fica exposto à internet (só à rede do Wi-Fi).
