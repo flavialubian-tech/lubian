@@ -41,7 +41,9 @@ export async function renderizarHtml(
 
 export async function gerarPdf(html: string): Promise<Buffer> {
   const executablePath = caminhoNavegador();
-  const browser = await chromium.launch({ executablePath }).catch((erro: Error) => {
+  // No contêiner (nuvem): sem sandbox (roda sem privilégios) e sem depender do /dev/shm pequeno do Docker.
+  const args = process.env.CHROMIUM_CONTEINER ? ['--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu'] : [];
+  const browser = await chromium.launch({ executablePath, args }).catch((erro: Error) => {
     throw new Error(
       `Não foi possível abrir o navegador para gerar o PDF (${executablePath ?? 'padrão do Playwright'}). ` +
         'Instale o Google Chrome ou informe CHROMIUM_PATH no arquivo .env.local.',

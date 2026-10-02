@@ -1,0 +1,21 @@
+# Render (plano Free): New → Blueprint → escolher este repositório. Os valores marcados sync:false
+# são pedidos na tela (copiar do bloco de notas com as chaves do Supabase).
+services:
+  - type: web
+    name: lubian-gestao
+    runtime: docker
+    plan: free
+    region: virginia
+    healthCheckPath: /login
+    autoDeploy: true
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SECRET_KEY
+        sync: false
+      - key: SENHA_INICIAL
+        sync: false
+      - key: SUPABASE_BUCKET
+        value: lubian

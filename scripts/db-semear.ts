@@ -2,6 +2,7 @@
  * Cria a empresa Lubian, usuários iniciais, equipe, catálogo de serviços e dados de exemplo.
  *   npm run db:semear
  * Senha inicial dos usuários: SENHA_INICIAL (padrão "lubian2026") — troque no primeiro acesso.
+ * Com --sem-exemplos (produção) cria só empresa, equipe, usuários e serviços — sem clientes, obras e orçamento de exemplo.
  */
 import { readFile } from 'node:fs/promises';
 import { eq } from 'drizzle-orm';
@@ -55,6 +56,11 @@ const servicos = await db
     { empresaId, nome: 'Limpeza Recorrente / Mensal' },
   ])
   .returning();
+
+if (process.argv.includes('--sem-exemplos')) {
+  console.log('Dados iniciais criados (sem exemplos). Acesse com flavia@lubian.local / bruna@lubian.local.');
+  process.exit(0);
+}
 
 const [regiane, raissa, , , katiane] = await db
   .insert(schema.clientes)
