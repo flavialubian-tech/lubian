@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { montarRecibo } from './recibo';
+import { dataPorExtenso, montarRecibo } from './recibo';
 
 const base = { servico: 'Limpeza Intermediária', localNoTexto: 'no Edifício Vila Zenaide (Apto 2702)' };
 
@@ -38,5 +38,11 @@ describe('montarRecibo', () => {
     expect(() =>
       montarRecibo({ ...base, tipo: 'quitacao', pagamentos: [{ descricao: 'Saldo', forma: 'Pix', valor: 10, pago: false }] }),
     ).toThrow();
+  });
+});
+
+describe('dataPorExtenso', () => {
+  it('formata a data da baixa', () => {
+    expect(dataPorExtenso('2026-09-25')).toBe('25 de Setembro de 2026');
   });
 });

@@ -6,6 +6,7 @@ import { Botao, Campo, Cartao, Selecao, Selo } from '@/components/ui';
 import { db, schema } from '@/db';
 import { cobrarSinal, conflitos, diaMes, hojeSP, mapearForcaTarefa, nomeDia } from '@/lib/agenda';
 import { dataCurta, dataHora, moeda } from '@/lib/formato';
+import { dispensaSinal } from '@/lib/contas-receber';
 import { FORMAS_PAGAMENTO, listarAlocacoes, listarBloqueios, sinalDoOrcamento } from '@/lib/operacao';
 import { entregueAcao, liberarPreReservaAcao, reagendarAcao, registrarSinalAcao } from '../actions';
 import { BotaoAcao } from './acoes-cliente';
@@ -22,8 +23,9 @@ export const SELO_ALOCACAO = {
 /** Agenda, sinal e entrega de um orçamento aprovado (D3). */
 export async function CartaoOperacao({ orc }: { orc: Orcamento }) {
   const datas = orc.datasPrevistas;
-  const [sinal, minhas, membros, todasAlocacoes] = await Promise.all([
+  const [sinal, semSinal, minhas, membros, todasAlocacoes] = await Promise.all([
     sinalDoOrcamento(orc.id),
+    dispensaSinal(orc.id),
     db.query.alocacoes.findMany({ where: eq(schema.alocacoes.orcamentoId, orc.id) }),
     db.query.equipe.findMany({ where: and(eq(schema.equipe.empresaId, orc.empresaId), eq(schema.equipe.ativo, true)) }),
     datas.length ? listarAlocacoes(orc.empresaId, datas[0], datas.at(-1)!) : Promise.resolve([]),
@@ -41,7 +43,7 @@ export async function CartaoOperacao({ orc }: { orc: Orcamento }) {
     bloqueios,
   );
   const outros = new Map(todasAlocacoes.map((a) => [a.orcamentoId, `${a.numero} · ${a.obraNome}`]));
-  const status = orc.entregueEm ? 'concluida' : ativas.length === 0 ? (minhas.length ? 'cancelada' : null) : sinal ? 'confirmada' : 'pre_reserva';
+  const status = orc.entregueEm ? 'concluida' : ativas.length === 0 ? (minhas.length ? 'cancelada' : null) : sinal || semSinal ? 'confirmada' : 'pre_reserva';
   const r = orc.resultado;
 
   return (
@@ -98,11 +100,16 @@ export async function CartaoOperacao({ orc }: { orc: Orcamento }) {
 
         <div className="space-y-3 text-sm">
           <h3 className="font-bold">Sinal de 50%</h3>
-          {sinal ? (
+          {semSinal ? (
+            <p className="rounded-lg bg-azul-claro px-3 py-2 text-azul">Condição especial do cliente: sem sinal, 100% após a entrega. A agenda já está confirmada.</p>
+          ) : sinal ? (
             <div className="space-y-1">
               <p className="font-semibold text-verde">
                 ✓ Sinal pago: {moeda(sinal.valor)} · {FORMAS_PAGAMENTO[sinal.forma]} · {dataCurta(`${sinal.pagoEm}T12:00:00`)}
               </p>
+              <a href={`/api/recibos/${sinal.id}`} target="_blank" className="mr-3 inline-block font-semibold text-azul hover:underline">
+                Recibo do sinal (PDF)
+              </a>
               {sinal.comprovante && (
                 <a href={`/api/comprovantes/${sinal.id}`} target="_blank" className="font-semibold text-azul hover:underline">
                   Ver comprovante
@@ -144,7 +151,7 @@ export async function CartaoOperacao({ orc }: { orc: Orcamento }) {
         <div className="space-y-3 text-sm">
           <h3 className="font-bold">Entrega</h3>
           {orc.entregueEm ? (
-            <p className="font-semibold text-verde">✓ Serviço entregue em {dataHora(orc.entregueEm)}. Quitação liberada ({moeda(r.saldo)}).</p>
+            <p className="font-semibold text-verde">✓ Serviço entregue em {dataHora(orc.entregueEm)}. Quitação liberada: dê baixa no Financeiro abaixo.</p>
           ) : (
             <>
               <p className="text-cinza">Ao terminar a obra, marque a entrega: a escala fica concluída e libera a cobrança da quitação ({moeda(r.saldo)}).</p>

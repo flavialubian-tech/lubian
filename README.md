@@ -18,7 +18,12 @@ Escopo completo e decisões: [`docs/ESCOPO.md`](docs/ESCOPO.md).
 - **Funil**: rascunho → enviado → aprovado / recusado, validade de 7 dias, lembretes de follow-up em 2 e 5 dias,
   painel "Para cobrar hoje", histórico de cada orçamento.
 
-## Rodar localmente
+## Usar no computador da Lubian (Windows 10, sem internet)
+
+Dois cliques em **`iniciar-lubian.bat`**: faz o backup do dia, prepara o banco, abre o sistema e mostra o endereço
+para os celulares do mesmo Wi-Fi. Instalação, backup, restauração e atualização: [`docs/OPERACAO.md`](docs/OPERACAO.md).
+
+## Rodar localmente (desenvolvimento)
 
 ```bash
 npm install
@@ -29,7 +34,7 @@ npm run dev            # http://localhost:3000
 Usuários iniciais (senha `lubian2026`, troque em "Minha conta"):
 `flavia@lubian.local` (Gestão), `bruna@lubian.local` (Administrativo), `anderson@lubian.local` (Líder).
 
-O PDF usa Chromium. Se ele não estiver no caminho padrão do Playwright, informe em `.env.local`:
+O PDF usa Chromium (detecta o Chrome ou o Edge instalados). Se não achar, informe em `.env.local`:
 `CHROMIUM_PATH=/caminho/para/chrome`.
 
 ## Variáveis de ambiente
@@ -40,6 +45,8 @@ O PDF usa Chromium. Se ele não estiver no caminho padrão do Playwright, inform
 | `APP_URL` | Endereço público usado nos links enviados ao cliente (ex.: `https://gestao.lubian.com.br`). |
 | `CHROMIUM_PATH` | Caminho do Chromium para gerar PDFs. |
 | `SENHA_INICIAL` | Senha dos usuários criados por `db:semear`. |
+| `BACKUP_DIR` | Pasta dos backups do modo local (padrão: `Documentos/Lubian Backups`). |
+| `PORT` | Porta do sistema (padrão 3000). |
 
 ## Comandos
 
@@ -47,6 +54,8 @@ O PDF usa Chromium. Se ele não estiver no caminho padrão do Playwright, inform
 |---|---|
 | `npm test` | Testes das regras de negócio (preço, fatura, recibo, extenso, funil) |
 | `npm run typecheck` | Verificação de tipos |
+| `npm run iniciar` | Abre o sistema no modo local (backup do dia, banco, compilação, servidor na rede) |
+| `npm run backup` / `restaurar` | Backup e restauração do modo local (com o sistema fechado) |
 | `npm run teste:e2e` | Percorre o sistema no navegador (com `npm run dev` rodando) |
 | `npm run orcamento` / `fatura` / `recibo` | Gera PDFs de exemplo a partir de `exemplos/*.json` |
 | `npm run db:gerar` / `db:migrar` | Gera / aplica migrações do banco |

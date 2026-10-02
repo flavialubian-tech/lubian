@@ -231,7 +231,7 @@ Numeração sequencial automática (ORC-2026-0001, REC-…, FAT-…).
 | Banco/Login/Arquivos | **Supabase** (PostgreSQL + Auth + Storage) | Fotos das vistorias, perfis de acesso e isolamento por empresa (multiempresa) nativos; plano gratuito para começar |
 | PDF | Templates HTML da Lubian → **Chromium headless** | PDF idêntico ao layout que vocês já usam |
 | Pagamentos/NFS-e | **Asaas** (API + webhooks) | Pix com baixa automática; NFS-e no mesmo lugar |
-| Hospedagem | Vercel (app) + Supabase | Custo inicial baixo/zero |
+| Hospedagem | Contêiner grátis (Google Cloud Run recomendado) + Supabase Free — ver `docs/FASE-4.md` | Custo zero no início; PDF precisa de Chromium |
 
 ---
 

@@ -2,10 +2,9 @@
  * Gera o PDF da fatura mensal de um contrato recorrente.
  *   npm run fatura -- exemplos/fatura-katiane.json saida/fatura.pdf
  */
-import { calcularFaturaMensal, diasProgramados } from '../src/fatura';
+import { calcularFaturaMensal, diasProgramados, referenciaMes } from '../src/fatura';
 import { carregarEmpresa, lerJson, salvarDocumento } from './lib/comum';
 
-const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 const dataBR = (d: Date) => d.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
 
 const [entrada = 'exemplos/fatura-katiane.json', saida = 'saida/fatura.pdf'] = process.argv.slice(2);
@@ -38,7 +37,7 @@ await salvarDocumento(
     empresa: await carregarEmpresa(),
     fatura: {
       numero: d.fatura.numero,
-      referencia: `${MESES[mes - 1]}/${ano}`,
+      referencia: referenciaMes(ano, mes),
       emissao: dataBR(emissao),
       vencimento: dataBR(vencimento),
     },

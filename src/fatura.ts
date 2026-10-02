@@ -7,6 +7,10 @@
  */
 
 export const NOMES_DIA_SEMANA = ['Domingos', 'Segundas', 'Terças', 'Quartas', 'Quintas', 'Sextas', 'Sábados'];
+export const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+
+/** Referência da fatura, ex.: "Outubro/2026". */
+export const referenciaMes = (ano: number, mes: number) => `${MESES[mes - 1]}/${ano}`;
 
 export interface DiasDaSemanaNoMes {
   /** 0 = domingo … 6 = sábado */

@@ -11,7 +11,10 @@ export interface ItemMenu {
 
 export function Navegacao({ itens }: { itens: ItemMenu[] }) {
   const caminho = usePathname();
-  const ativo = (href: string) => (href === '/' ? caminho === '/' : caminho.startsWith(href));
+  // O item mais específico que casa com a rota (ex.: /equipe/acerto não acende /equipe).
+  const casa = (href: string) => (href === '/' ? caminho === '/' : caminho === href || caminho.startsWith(`${href}/`));
+  const atual = itens.filter((i) => casa(i.href)).sort((a, b) => b.href.length - a.href.length)[0]?.href;
+  const ativo = (href: string) => href === atual;
   return (
     <nav className="flex gap-1 overflow-x-auto md:flex-col md:overflow-visible">
       {itens.map((i) => (

@@ -11,6 +11,7 @@ import { exigirOperador } from '@/lib/auth';
 import { TIPOS_CLIENTE } from '@/lib/rotulos';
 
 const tipoSchema = z.enum(Object.keys(TIPOS_CLIENTE) as [keyof typeof TIPOS_CLIENTE]);
+const prazoDiasUteis = (v: string | null) => (v ? z.coerce.number().int().min(1, 'Prazo em dias úteis inválido').max(90).parse(v) : null);
 
 export async function salvarCliente(id: string | null, _: EstadoForm, f: FormData): Promise<EstadoForm> {
   const sessao = await exigirOperador();
@@ -35,6 +36,7 @@ export async function salvarCliente(id: string | null, _: EstadoForm, f: FormDat
       enderecoCobranca: campo(f, 'enderecoCobranca'),
       indicadoPorId: indicadoPorId && indicadoPorId !== id ? indicadoPorId : null,
       prazoPagamento: campo(f, 'prazoPagamento'),
+      prazoDiasUteis: prazoDiasUteis(campo(f, 'prazoDiasUteis')),
       observacoes: campo(f, 'observacoes'),
     };
     if (id) {

@@ -2,6 +2,7 @@
  * Cria a empresa Lubian, usuários iniciais, equipe, catálogo de serviços e dados de exemplo.
  *   npm run db:semear
  * Senha inicial dos usuários: SENHA_INICIAL (padrão "lubian2026") — troque no primeiro acesso.
+ * Com --sem-exemplos (produção) cria só empresa, equipe, usuários e serviços — sem clientes, obras e orçamento de exemplo.
  */
 import { readFile } from 'node:fs/promises';
 import { eq } from 'drizzle-orm';
@@ -56,13 +57,19 @@ const servicos = await db
   ])
   .returning();
 
-const [regiane, raissa] = await db
+if (process.argv.includes('--sem-exemplos')) {
+  console.log('Dados iniciais criados (sem exemplos). Acesse com flavia@lubian.local / bruna@lubian.local.');
+  process.exit(0);
+}
+
+const [regiane, raissa, , , katiane] = await db
   .insert(schema.clientes)
   .values([
     { empresaId, tipo: 'arquiteto', nome: 'Regiane (Arquiteta)', telefone: '(49) 99999-0001' },
     { empresaId, tipo: 'pessoa_fisica', nome: 'Raíssa', telefone: '(49) 99999-0002', prazoPagamento: '50% sinal / 50% entrega' },
     { empresaId, tipo: 'pessoa_fisica', nome: 'Christian Dalla Rosa', telefone: '(49) 99999-0003' },
-    { empresaId, tipo: 'empresa', nome: 'CREDCREA', enderecoCobranca: 'Sede administrativa', prazoPagamento: '10 dias úteis após entrega e NF' },
+    { empresaId, tipo: 'empresa', nome: 'CREDCREA', enderecoCobranca: 'Sede administrativa', prazoPagamento: '10 dias úteis após entrega e NF', prazoDiasUteis: 10 },
+    { empresaId, tipo: 'pessoa_fisica', nome: 'Katiane Laura Balzan', telefone: '(49) 99999-0004', saudacao: 'Querida Katiane', enderecoCobranca: 'Rua Uruguai - Centro - Chapecó/SC' },
   ])
   .returning();
 await db.update(schema.clientes).set({ indicadoPorId: regiane.id }).where(eq(schema.clientes.id, raissa.id));
@@ -71,6 +78,23 @@ const [obra] = await db
   .insert(schema.obras)
   .values({ empresaId, clienteId: raissa.id, nome: 'Residência - 2 Pavimentos', tipoImovel: 'Casa', areaM2: '140', parceiroId: regiane.id })
   .returning();
+
+// Contrato recorrente (modelo Katiane): seg, qua e sex.
+const [salaKatiane] = await db
+  .insert(schema.obras)
+  .values({ empresaId, clienteId: katiane.id, nome: 'Sala comercial - Centro', endereco: 'Rua Uruguai - Centro - Chapecó/SC' })
+  .returning();
+await db.insert(schema.contratos).values({
+  empresaId,
+  clienteId: katiane.id,
+  obraId: salaKatiane.id,
+  diasSemana: [1, 3, 5],
+  diariaBase: '180',
+  descontoAntecipacao: '0.10',
+  diariaEspecie: '160',
+  prazoDias: 7,
+  saudacao: 'Querida Katiane',
+});
 
 // Orçamento de exemplo (modelo Raíssa).
 const ex = JSON.parse(await readFile('exemplos/orcamento-raissa.json', 'utf8'));

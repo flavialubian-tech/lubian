@@ -4,7 +4,9 @@ import { BotaoLink, Cabecalho, Cartao, Selo, Vazio } from '@/components/ui';
 import { cobrarSinal, diaMes, hojeSP, nomeDia, somarDias } from '@/lib/agenda';
 import { exigirOperador } from '@/lib/auth';
 import { listarOrcamentos } from '@/lib/consultas';
+import { listarCobrancas } from '@/lib/financeiro';
 import { dataCurta, linkWhatsApp, moeda, percentual } from '@/lib/formato';
+import { avisoBackup } from '@/lib/modo-local';
 import { listarAlocacoes, listarSinaisPendentes } from '@/lib/operacao';
 
 export const metadata = { title: 'Painel' };
@@ -12,10 +14,12 @@ export const metadata = { title: 'Painel' };
 export default async function Painel() {
   const sessao = await exigirOperador();
   const hoje = hojeSP();
-  const [todos, sinais, proximas] = await Promise.all([
+  const [todos, sinais, proximas, vencendo, backup] = await Promise.all([
     listarOrcamentos(sessao.empresaId),
     listarSinaisPendentes(sessao.empresaId),
     listarAlocacoes(sessao.empresaId, hoje, somarDias(hoje, 6)),
+    listarCobrancas(sessao.empresaId, { status: ['aberta'], venceAte: hoje }),
+    avisoBackup(),
   ]);
   const sinaisCobrar = sinais.filter((o) => cobrarSinal({ aprovadoEm: o.aprovadoEm, sinalPago: false }));
   // Próximos serviços: um por obra e dia, com a equipe escalada.
@@ -45,6 +49,10 @@ export default async function Painel() {
         subtitulo="Resumo comercial da Lubian Limpezas"
         acoes={<BotaoLink href="/orcamentos/novo">+ Novo orçamento</BotaoLink>}
       />
+
+      {backup && (
+        <p className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-vermelho">⚠️ {backup}</p>
+      )}
 
       <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
         {indicadores.map((i) => (
@@ -91,6 +99,35 @@ export default async function Painel() {
                   <div className="text-right">
                     <StatusOrcamento status={o.status} situacao={o.situacao} />
                     <p className="mt-1 text-sm font-bold">{moeda(o.valorFinal)}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Cartao>
+
+        <Cartao
+          titulo="Cobranças vencendo hoje e vencidas"
+          acoes={<BotaoLink href="/financeiro?ver=vencidas" variante="fantasma">Financeiro</BotaoLink>}
+        >
+          {vencendo.length === 0 ? (
+            <Vazio>Nenhuma cobrança vencida ou vencendo hoje. 👏</Vazio>
+          ) : (
+            <ul className="divide-y divide-slate-100">
+              {vencendo.map((c) => (
+                <li key={c.id} className="flex items-center justify-between gap-3 py-3">
+                  <div className="min-w-0">
+                    <Link href={c.orcamentoId ? `/orcamentos/${c.orcamentoId}` : '/financeiro'} className="font-semibold text-azul hover:underline">
+                      {c.clienteNome}
+                    </Link>
+                    <p className="truncate text-xs text-cinza">
+                      {c.descricao}
+                      {c.orcamentoNumero && ` · ${c.orcamentoNumero}`}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    {c.vencimento < hoje ? <Selo cor="vermelho">Vencida {diaMes(c.vencimento)}</Selo> : <Selo cor="amarelo">Vence hoje</Selo>}
+                    <p className="mt-1 text-sm font-bold">{moeda(c.valor)}</p>
                   </div>
                 </li>
               ))}
