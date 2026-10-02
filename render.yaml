@@ -19,3 +19,6 @@ services:
         sync: false
       - key: SUPABASE_BUCKET
         value: lubian
+      # 512 MB não comportam o Chromium: o PDF é feito pelo navegador de quem abre (src/pdf/modo.ts).
+      - key: PDF_PELO_NAVEGADOR
+        value: "1"

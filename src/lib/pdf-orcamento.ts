@@ -2,6 +2,7 @@ import 'server-only';
 import { eq } from 'drizzle-orm';
 import { db, schema } from '@/db';
 import { gerarPdf, renderizarHtml } from '@/pdf/gerar-documento';
+import { pdfPeloNavegador, respostaPaginaParaSalvar } from '@/pdf/modo';
 import { dadosDocumentoOrcamento } from './documento-orcamento';
 
 type Orcamento = typeof schema.orcamentos.$inferSelect;
@@ -26,7 +27,9 @@ export async function htmlDoOrcamento(orc: Orcamento) {
 }
 
 export async function respostaPdfOrcamento(orc: Orcamento) {
-  const pdf = await gerarPdf(await htmlDoOrcamento(orc));
+  const html = await htmlDoOrcamento(orc);
+  if (pdfPeloNavegador()) return respostaPaginaParaSalvar(html, `Orcamento-${orc.numero}.pdf`);
+  const pdf = await gerarPdf(html);
   return new Response(new Uint8Array(pdf), {
     headers: {
       'Content-Type': 'application/pdf',
