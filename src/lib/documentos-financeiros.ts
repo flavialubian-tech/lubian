@@ -3,6 +3,7 @@
  */
 import 'server-only';
 import { and, eq, inArray } from 'drizzle-orm';
+import QRCode from 'qrcode';
 import { db, schema } from '@/db';
 import { referenciaMes } from '@/fatura';
 import { dataPorExtenso, montarRecibo, type Pagamento } from '@/recibo';
@@ -11,6 +12,7 @@ import { pdfPeloNavegador, respostaPaginaParaSalvar } from '@/pdf/modo';
 import { ErroNegocio } from './erros';
 import { proximoNumero } from './numeracao';
 import { FORMAS_PAGAMENTO } from './operacao';
+import { pixDaEmpresa } from './pix';
 
 const dataBR = (d: string) => d.split('-').reverse().join('/');
 
@@ -111,6 +113,9 @@ export async function dadosFatura(faturaId: string) {
   const empresa = await empresaDoc(f.fatura.empresaId);
   const endereco = f.cliente.enderecoCobranca ?? f.obra.endereco ?? '';
   const [linha1, ...resto] = endereco.split(/\s+-\s+(?=[^-]*$)/);
+  // Pix copia e cola + QR do valor da Opção 1 (Pix), para o cliente pagar direto da fatura.
+  const codigoPix = pixDaEmpresa(empresa, f.fatura.calculo.pix.total, f.fatura.numero);
+  const pix = codigoPix ? { codigo: codigoPix, qr: await QRCode.toDataURL(codigoPix, { margin: 1, width: 240 }) } : null;
   return {
     nomeArquivo: `Fatura-${f.fatura.numero}.pdf`,
     dados: {
@@ -126,6 +131,7 @@ export async function dadosFatura(faturaId: string) {
       calendario: f.fatura.calendario,
       saudacao: f.contrato.saudacao ?? f.cliente.saudacao ?? `Olá, ${f.cliente.nome.trim().split(/\s+/)[0]}`,
       mensagem: MENSAGEM_FATURA,
+      pix,
     },
   };
 }

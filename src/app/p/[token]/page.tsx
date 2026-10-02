@@ -2,11 +2,15 @@ import { eq } from 'drizzle-orm';
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
+import QRCode from 'qrcode';
+import { CopiarPix } from '@/components/copiar-pix';
 import { Formulario } from '@/components/formulario';
 import { Botao, BotaoLink } from '@/components/ui';
 import { db, schema } from '@/db';
 import { dataCurta, dataHora, linkWhatsApp, moeda } from '@/lib/formato';
 import { dataExpiracao, situacaoNoFunil } from '@/lib/funil';
+import { sinalDoOrcamento } from '@/lib/operacao';
+import { pixDaEmpresa } from '@/lib/pix';
 import { orcamentoPublico } from '@/lib/orcamento-sessao';
 import logo from '../../../../assets/logo-lubian.png';
 import { aprovarAcao } from './actions';
@@ -25,6 +29,10 @@ export default async function OrcamentoCliente(props: PageProps<'/p/[token]'>) {
 
   const r = orc.resultado;
   const expirado = situacaoNoFunil(orc).tipo === 'expirado';
+  // Pix do sinal (copia e cola + QR) enquanto o sinal não foi registrado.
+  const sinalPago = orc.status === 'aprovado' && !!(await sinalDoOrcamento(orc.id));
+  const codigoPix = orc.status === 'aprovado' && !sinalPago ? pixDaEmpresa(empresa, r.sinal, orc.numero) : null;
+  const qrPix = codigoPix ? await QRCode.toDataURL(codigoPix, { margin: 1, width: 320 }) : null;
   const falarComEquipe = linkWhatsApp(empresa.telefone, `Olá! Sou ${cliente.nome}, sobre o orçamento ${orc.numero}.`);
 
   return (
@@ -41,13 +49,23 @@ export default async function OrcamentoCliente(props: PageProps<'/p/[token]'>) {
         {orc.status === 'aprovado' ? (
           <div className="space-y-2">
             <p className="text-lg font-bold text-verde">✓ Orçamento aprovado em {dataHora(orc.aprovadoEm)}. Obrigado!</p>
-            <p className="text-sm">
-              Para <strong>confirmar a data da força-tarefa</strong>, faça o Pix do sinal de 50%: <strong className="text-azul">{moeda(r.sinal)}</strong>
-            </p>
-            {empresa.chavePix && (
-              <p className="rounded-lg bg-azul-claro px-3 py-2 text-sm">
-                Chave Pix (CNPJ): <strong className="select-all">{empresa.chavePix}</strong> · {empresa.nome}
-              </p>
+            {sinalPago ? (
+              <p className="text-sm font-semibold text-verde">✓ Sinal recebido: a data da força-tarefa está confirmada.</p>
+            ) : (
+              <>
+                <p className="text-sm">
+                  Para <strong>confirmar a data da força-tarefa</strong>, faça o Pix do sinal de 50%: <strong className="text-azul">{moeda(r.sinal)}</strong>
+                </p>
+                {codigoPix && qrPix ? (
+                  <CopiarPix codigo={codigoPix} qr={qrPix} valor={moeda(r.sinal)} />
+                ) : (
+                  empresa.chavePix && (
+                    <p className="rounded-lg bg-azul-claro px-3 py-2 text-sm">
+                      Chave Pix: <strong className="select-all">{empresa.chavePix}</strong> · {empresa.nome}
+                    </p>
+                  )
+                )}
+              </>
             )}
             <BotaoLink href={falarComEquipe} target="_blank" variante="sucesso">
               Enviar comprovante pelo WhatsApp

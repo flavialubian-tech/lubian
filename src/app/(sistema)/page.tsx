@@ -3,11 +3,14 @@ import { StatusOrcamento } from '@/components/status-orcamento';
 import { BotaoLink, Cabecalho, Cartao, Selo, Vazio } from '@/components/ui';
 import { cobrarSinal, diaMes, hojeSP, nomeDia, somarDias } from '@/lib/agenda';
 import { exigirOperador } from '@/lib/auth';
+import { buscarEmpresa } from '@/lib/empresa';
 import { listarOrcamentos } from '@/lib/consultas';
 import { listarCobrancas } from '@/lib/financeiro';
 import { dataCurta, linkWhatsApp, moeda, percentual } from '@/lib/formato';
+import { mensagemCobrarSinal } from '@/lib/mensagens';
 import { avisoBackup } from '@/lib/modo-local';
 import { listarAlocacoes, listarSinaisPendentes } from '@/lib/operacao';
+import { pixDaEmpresa } from '@/lib/pix';
 
 export const metadata = { title: 'Painel' };
 
@@ -21,6 +24,7 @@ export default async function Painel() {
     listarCobrancas(sessao.empresaId, { status: ['aberta'], venceAte: hoje }),
     avisoBackup(),
   ]);
+  const empresa = await buscarEmpresa(sessao.empresaId);
   const sinaisCobrar = sinais.filter((o) => cobrarSinal({ aprovadoEm: o.aprovadoEm, sinalPago: false }));
   // Próximos serviços: um por obra e dia, com a equipe escalada.
   const grupos = new Map<string, typeof proximas>();
@@ -152,7 +156,7 @@ export default async function Painel() {
                   </div>
                   <div className="text-right">
                     <a
-                      href={linkWhatsApp(o.clienteTelefone, `Olá, ${o.clienteNome}! Para confirmarmos a sua data na agenda da Lubian, falta apenas o Pix do sinal de 50% (${moeda(o.sinal)}) referente ao orçamento ${o.numero}. 💙`)}
+                      href={linkWhatsApp(o.clienteTelefone, mensagemCobrarSinal({ clienteNome: o.clienteNome, numero: o.numero, valor: o.sinal, pix: pixDaEmpresa(empresa, o.sinal, o.numero) }))}
                       target="_blank"
                       className="text-xs font-semibold text-verde hover:underline"
                     >
