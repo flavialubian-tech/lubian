@@ -45,3 +45,18 @@ export function mensagemFollowUp(d: DadosMensagem, etapa: 1 | 2) {
     d.link,
   ].join('\n');
 }
+
+export function mensagemFatura(d: { clienteNome: string; saudacao?: string | null; numero: string; referencia: string; valorPix: number; valorEspecie?: number | null; vencimento: string; link: string }) {
+  return [
+    `${d.saudacao || `Olá, ${primeiroNome(d.clienteNome)}`}! 😊`,
+    '',
+    `Segue a *Fatura ${d.numero}* das diárias de ${d.referencia}:`,
+    d.link,
+    '',
+    `💠 Pix / Transferência: *${moeda(d.valorPix)}*`,
+    ...(d.valorEspecie ? [`💵 Dinheiro (espécie): *${moeda(d.valorEspecie)}*`] : []),
+    `🗓️ Vencimento: ${d.vencimento}`,
+    '',
+    'Qualquer dúvida, estou à disposição! 💙',
+  ].join('\n');
+}

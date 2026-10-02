@@ -24,3 +24,6 @@ export const campo = (f: FormData, nome: string) => {
   const v = f.get(nome);
   return typeof v === 'string' && v.trim() ? v.trim() : null;
 };
+
+/** "1.234,56", "1234,56" ou "1234.56" → "1234.56" */
+export const numeroBR = (v: string | null) => (v?.includes(',') ? v.replace(/\./g, '').replace(',', '.') : (v ?? ''));

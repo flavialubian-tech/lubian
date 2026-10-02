@@ -1,9 +1,10 @@
 # Fase 4 — Pix automático (Asaas) e colocação no ar (especificação para implementar)
 
-Leia antes: `AGENTS.md`, `docs/ESCOPO.md` §3.5, §3.8 (integração de pagamento, D7) e §5. Fases 1–3 prontas
-(`cobrancas`, `pagamentos.cobrancaId`, recibos REC e faturas FAT já existem). Reaproveite:
-`registrarSinal` / `sincronizarAlocacoes` (`src/lib/operacao.ts`), o fluxo **Registrar pagamento** da Fase 3
-(pagamento → cobrança `paga` → recibo PDF), `src/lib/arquivos.ts`, `src/lib/url.ts`, a rota pública `/p/[token]`.
+Leia antes: `AGENTS.md`, `docs/ESCOPO.md` §3.5, §3.8 (gateway — D7) e §5. Fases 1 a 3 prontas: `cobrancas` é a
+fonte única de contas a receber (sinal/saldo na aprovação, `fatura` nos contratos) e
+`registrarPagamento` (`src/lib/financeiro.ts`) já dá baixa, numera o recibo (REC) e confirma a agenda no sinal.
+A Fase 4 **não muda as regras**: o Asaas só cria a cobrança lá fora e chama `registrarPagamento` quando o cliente paga.
+O mesmo código roda **no computador** (sem `DATABASE_URL` → PGlite, Parte L) ou **na nuvem** (com `DATABASE_URL`, Parte B).
 
 ## ⚠️ Decisão pendente (Flávia): onde hospedar — **custo zero por enquanto**
 Restrição: sem caixa para investir agora. **Começar pelo modo local (Parte L)**, sem nenhum serviço online.
@@ -95,6 +96,11 @@ O Asaas **não cobra mensalidade**, mas cobra tarifa por cobrança paga com QR C
   empresaId, evento, asaasPagamentoId, payload jsonb, processadoEm?, erro?, recebidoEm.
 
 ### Cliente da API — `src/lib/asaas.ts` (`server-only`)
+- Com `ASAAS_FAKE=1` usa um cliente simulado (testes e e2e, sem rede).
+- Regras puras com testes em `src/lib/asaas-regras.ts`: `paraCobrancaAsaas(cobranca, cliente)` (corpo do
+  `POST /payments`; fatura com `billingType: UNDEFINED` deixa Pix/boleto/cartão) e `eventoParaAcao(evento)`.
+- Baixa pelo webhook sempre via `registrarPagamento` (usuário "Sistema (Asaas)", `registradoPorId` nulo); recibo com
+  link público `/r/[token]` (como `/f/[token]`) e painel "Recibos para enviar".
 - Base: `https://api-sandbox.asaas.com/v3` ou `https://api.asaas.com/v3` conforme `ASAAS_AMBIENTE`;
   cabeçalho `access_token: $ASAAS_API_KEY`, `User-Agent: lubian-gestao`.
 - `garantirClienteAsaas(cliente)`: `POST /customers` (name, cpfCnpj, email, mobilePhone, externalReference = id
@@ -190,6 +196,10 @@ Teste do webhook repetido (mesmo `id` 2×) gera um só pagamento.
 - `GET /api/saude`: responde 200 com `select 1` no banco (health check da plataforma).
 - Antes de publicar: conferir que um orçamento, um recibo e uma fatura saem em PDF **dentro do contêiner**
   (`docker run` local + `npm run teste:e2e` apontando para ele).
+
+### Segurança e dados iniciais de produção
+- Cabeçalhos básicos (`X-Frame-Options`, `Referrer-Policy`), `robots` noindex nas rotas públicas; cookie `secure` em produção.
+- `npm run db:semear -- --sem-exemplos` em produção (sem o orçamento de exemplo); trocar as senhas no 1º acesso.
 
 ### Endereço e HTTPS
 - **Agora (grátis):** usar o endereço que a plataforma dá (ex.: `lubian-gestao-xxxx.run.app` ou

@@ -15,6 +15,7 @@ import { urlBase } from '@/lib/url';
 import { aprovarManualAcao, followUpAcao, liberarAcao, recusarAcao } from '../actions';
 import { EditorOrcamento } from '../editor';
 import { BotaoAcao, BotaoEnviarWhatsApp, BotaoMarcarEnviado, CopiarLink } from './acoes-cliente';
+import { CartaoFinanceiroObra } from './financeiro-obra';
 import { CartaoOperacao } from './operacao';
 
 const NOMES_EVENTO: Record<string, string> = {
@@ -27,6 +28,7 @@ const NOMES_EVENTO: Record<string, string> = {
   liberacao_markup: 'Liberação de markup (Gestão)',
   agenda: 'Agenda',
   sinal_pago: 'Sinal pago',
+  quitado: 'Pagamento final (quitação)',
   entregue: 'Serviço entregue',
 };
 
@@ -176,6 +178,7 @@ export default async function Orcamento(props: PageProps<'/orcamentos/[id]'>) {
       </div>
 
       {orc.status === 'aprovado' && <CartaoOperacao orc={orc} />}
+      {orc.status === 'aprovado' && <CartaoFinanceiroObra orc={orc} />}
 
       <EditorOrcamento
         id={orc.id}
