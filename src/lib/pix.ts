@@ -33,6 +33,40 @@ export function normalizarChavePix(chave: string) {
   return /^[\d.\-/\s]+$/.test(c) && (digitos.length === 11 || digitos.length === 14) ? digitos : c;
 }
 
+const digitosValidos = (d: string, pesos: number[][]) =>
+  !/^(\d)\1+$/.test(d) &&
+  pesos.every((p) => {
+    const soma = p.reduce((s, peso, j) => s + Number(d[j]) * peso, 0);
+    const resto = soma % 11;
+    return Number(d[p.length]) === (resto < 2 ? 0 : 11 - resto);
+  });
+
+export const cpfValido = (cpf: string) => {
+  const d = cpf.replace(/\D/g, '');
+  return d.length === 11 && digitosValidos(d, [[10, 9, 8, 7, 6, 5, 4, 3, 2], [11, 10, 9, 8, 7, 6, 5, 4, 3, 2]]);
+};
+
+export const cnpjValido = (cnpj: string) => {
+  const d = cnpj.replace(/\D/g, '');
+  return d.length === 14 && digitosValidos(d, [[5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2], [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]]);
+};
+
+/** Confere a chave Pix (CPF, CNPJ, e-mail, celular +55 ou aleatória). Devolve o erro, ou null se está ok. */
+export function erroChavePix(chave: string): string | null {
+  const c = chave.trim();
+  if (!c) return 'Informe a chave Pix';
+  if (/^[\d.\-/\s]+$/.test(c)) {
+    const d = c.replace(/\D/g, '');
+    if (d.length === 11) return cpfValido(d) ? null : 'CPF inválido: confira os números. Se for celular, escreva com +55 na frente (ex.: +5549988907454)';
+    if (d.length === 14) return cnpjValido(d) ? null : 'CNPJ inválido: confira os números';
+    return 'Número com tamanho de CPF (11) ou CNPJ (14) dígitos. Celular precisa começar com +55';
+  }
+  if (c.startsWith('+')) return /^\+55\d{10,11}$/.test(c) ? null : 'Celular no formato +55 DDD número, só dígitos (ex.: +5549988907454)';
+  if (c.includes('@')) return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c) ? null : 'E-mail inválido';
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(c)) return null;
+  return 'Chave não reconhecida. Use CPF, CNPJ, e-mail, celular (+55...) ou chave aleatória';
+}
+
 export interface DadosPix {
   chave: string;
   /** Nome de quem recebe (máx. 25). */
