@@ -1,3 +1,4 @@
+import { BotaoExcluir } from '@/components/botao-excluir';
 import { Formulario } from '@/components/formulario';
 import { Botao, Campo, Cartao, Selecao, Selo, cx } from '@/components/ui';
 import type { schema } from '@/db';
@@ -61,6 +62,7 @@ export async function CartaoFinanceiroObra({ orc }: { orc: Orcamento }) {
                     {c.tipo === 'sinal' ? 'Recibo de sinal' : 'Recibo de quitação'} {p.reciboNumero} (PDF)
                   </a>
                 )}
+                {c.status === 'paga' && p && <BotaoExcluir tipo="pagamento" id={p.id} rotulo="Excluir pagamento" confirmar={"Excluir este pagamento lançado por engano? O recibo deixa de valer, a cobrança volta para \"em aberto\" e, se for o sinal, a agenda volta para pré-reserva."} className="ml-3" />}
                 {c.status === 'aberta' && c.tipo === 'saldo' && orc.entregueEm && (
                   <details className="mt-2">
                     <summary className="cursor-pointer text-xs font-semibold text-azul">Registrar quitação</summary>

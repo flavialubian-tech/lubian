@@ -1,6 +1,7 @@
 import { and, desc, eq } from 'drizzle-orm';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { BotaoExcluir } from '@/components/botao-excluir';
 import { StatusOrcamento } from '@/components/status-orcamento';
 import { BotaoLink, Cabecalho, Cartao, Vazio } from '@/components/ui';
 import { db, schema } from '@/db';
@@ -42,6 +43,14 @@ export default async function Obra(props: PageProps<'/obras/[id]'>) {
               + Vistoria técnica
             </BotaoLink>
             <BotaoLink href={`/orcamentos/novo?obra=${obra.id}`}>+ Orçamento</BotaoLink>
+            <BotaoExcluir
+              tipo="obra"
+              id={obra.id}
+              voltarPara={`/clientes/${obra.clienteId}`}
+              rotulo="Excluir obra"
+              confirmar={`Excluir a obra ${obra.nome}, com as vistorias dela?`}
+              className="self-center"
+            />
           </>
         }
       />

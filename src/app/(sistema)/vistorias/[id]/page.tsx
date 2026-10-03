@@ -1,6 +1,7 @@
 import { and, eq } from 'drizzle-orm';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { BotaoExcluir } from '@/components/botao-excluir';
 import { Formulario } from '@/components/formulario';
 import { AreaTexto, Botao, BotaoLink, Cabecalho, Caixa, Campo, Cartao, Rotulo, Selecao, Vazio } from '@/components/ui';
 import { db, schema } from '@/db';
@@ -29,7 +30,12 @@ export default async function Vistoria(props: PageProps<'/vistorias/[id]'>) {
             {v.obra.cliente.nome} — {v.obra.nome}
           </Link>
         }
-        acoes={<BotaoLink href={`/orcamentos/novo?vistoria=${v.id}`}>Gerar orçamento desta vistoria →</BotaoLink>}
+        acoes={
+          <>
+            <BotaoLink href={`/orcamentos/novo?vistoria=${v.id}`}>Gerar orçamento desta vistoria →</BotaoLink>
+            <BotaoExcluir tipo="vistoria" id={v.id} voltarPara="/vistorias" rotulo="Excluir vistoria" confirmar="Excluir esta vistoria e as fotos dela?" className="self-center" />
+          </>
+        }
       />
       <div className="grid gap-6 lg:grid-cols-2">
         <Cartao titulo="Levantamento">

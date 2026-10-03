@@ -1,5 +1,6 @@
 import { and, eq } from 'drizzle-orm';
 import Link from 'next/link';
+import { BotaoExcluir } from '@/components/botao-excluir';
 import { Formulario } from '@/components/formulario';
 import { SeletorDatas } from '@/components/seletor-datas';
 import { Botao, Campo, Cartao, Selecao, Selo } from '@/components/ui';
@@ -115,6 +116,7 @@ export async function CartaoOperacao({ orc }: { orc: Orcamento }) {
                   Ver comprovante
                 </a>
               )}
+              <BotaoExcluir tipo="pagamento" id={sinal.id} rotulo="Excluir pagamento do sinal" confirmar={"Excluir este pagamento lançado por engano? O recibo deixa de valer, a cobrança volta para \"em aberto\" e, se for o sinal, a agenda volta para pré-reserva."} className="ml-3" />
             </div>
           ) : (
             <>

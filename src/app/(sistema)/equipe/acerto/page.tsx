@@ -1,5 +1,6 @@
 import { and, asc, eq } from 'drizzle-orm';
 import Link from 'next/link';
+import { BotaoExcluir } from '@/components/botao-excluir';
 import { Formulario } from '@/components/formulario';
 import { Botao, Cabecalho, Campo, Cartao, Selo, Tabela, Vazio } from '@/components/ui';
 import { db, schema } from '@/db';
@@ -155,6 +156,7 @@ export default async function Acerto(props: PageProps<'/equipe/acerto'>) {
                             <button className="text-xs font-semibold text-verde hover:underline">Marcar como pago</button>
                           </form>
                         )}
+                        <BotaoExcluir tipo="acerto" id={a.id} rotulo="Desfazer" confirmar="Desfazer este acerto? Os vales voltam a ficar em aberto e o período pode ser fechado de novo." />
                       </span>
                     </li>
                   ))}

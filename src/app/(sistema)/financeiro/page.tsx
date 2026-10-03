@@ -1,11 +1,15 @@
 import Link from 'next/link';
+import { BotaoExcluir } from '@/components/botao-excluir';
 import { BotaoLink, Cabecalho, Cartao, Selo, Tabela, Vazio, cx } from '@/components/ui';
 import { hojeSP } from '@/lib/agenda';
 import { exigirOperador } from '@/lib/auth';
+import { buscarEmpresa } from '@/lib/empresa';
 import { situacaoCobranca } from '@/lib/cobranca';
 import { listarCobrancas, listarPagamentos, type CobrancaListada } from '@/lib/financeiro';
 import { dataCurta, linkWhatsApp, moeda } from '@/lib/formato';
+import { mensagemCobranca } from '@/lib/mensagens';
 import { FORMAS_PAGAMENTO } from '@/lib/operacao';
+import { pixDaEmpresa } from '@/lib/pix';
 import { limitesMes } from '@/lib/relatorios';
 import { registrarPagamentoAcao } from './actions';
 import { FormPagamento } from './form-pagamento';
@@ -26,8 +30,16 @@ function SeloSituacao({ c, hoje }: { c: CobrancaListada; hoje: string }) {
   return <Selo cor="azul">Em aberto</Selo>;
 }
 
-function mensagemCobranca(c: CobrancaListada) {
-  return `Olá, ${c.clienteNome.split(' ')[0]}! Passando para lembrar do pagamento de ${moeda(c.valor)} (${c.descricao}${c.orcamentoNumero ? ` · ${c.orcamentoNumero}` : ''}), com vencimento em ${dataBR(c.vencimento)}. Chave Pix CNPJ: 44.883.814/0001-97. 💙`;
+function mensagem(c: CobrancaListada, empresa: Parameters<typeof pixDaEmpresa>[0]) {
+  const referencia = c.orcamentoNumero ?? c.faturaNumero;
+  return mensagemCobranca({
+    clienteNome: c.clienteNome,
+    descricao: c.descricao,
+    referencia,
+    valor: c.valor,
+    vencimento: dataBR(c.vencimento),
+    pix: pixDaEmpresa(empresa, c.valor, referencia ?? undefined),
+  });
 }
 
 export default async function Financeiro(props: PageProps<'/financeiro'>) {
@@ -38,10 +50,11 @@ export default async function Financeiro(props: PageProps<'/financeiro'>) {
   const hoje = hojeSP();
   const mes = limitesMes(hoje.slice(0, 7));
 
-  const [todas, pagosMes, pagosHoje] = await Promise.all([
+  const [todas, pagosMes, pagosHoje, empresa] = await Promise.all([
     listarCobrancas(sessao.empresaId),
     listarPagamentos(sessao.empresaId, mes),
     listarPagamentos(sessao.empresaId, {}).then((l) => l.filter((p) => hojeSP(p.criadoEm) === hoje)),
+    buscarEmpresa(sessao.empresaId),
   ]);
   // Baixas feitas hoje continuam na lista "Em aberto", já com o recibo.
   const reciboHoje = new Map(pagosHoje.map((p) => [p.cobrancaId, p]));
@@ -137,7 +150,7 @@ export default async function Financeiro(props: PageProps<'/financeiro'>) {
                       <summary className="cursor-pointer text-sm font-semibold text-azul">Registrar pagamento</summary>
                       <div className="mt-3 grid gap-3 md:grid-cols-[1fr_auto]">
                         <FormPagamento action={registrarPagamentoAcao.bind(null, c.id)} valor={c.valor} valorEspecie={c.valorEspecie} hoje={hoje} />
-                        <a href={linkWhatsApp(c.clienteTelefone, mensagemCobranca(c))} target="_blank" className="self-start text-xs font-semibold text-verde hover:underline">
+                        <a href={linkWhatsApp(c.clienteTelefone, mensagem(c, empresa))} target="_blank" className="self-start text-xs font-semibold text-verde hover:underline">
                           Cobrar no WhatsApp
                         </a>
                       </div>
@@ -173,7 +186,8 @@ export default async function Financeiro(props: PageProps<'/financeiro'>) {
                     <a href={`/api/comprovantes/${p.id}`} target="_blank" className="text-xs font-semibold text-azul hover:underline">
                       comprovante
                     </a>
-                  )}
+                  )}{' '}
+                  <BotaoExcluir tipo="pagamento" id={p.id} confirmar={"Excluir este pagamento lançado por engano? O recibo deixa de valer, a cobrança volta para \"em aberto\" e, se for o sinal, a agenda volta para pré-reserva."} className="ml-2" />
                 </td>
               </tr>
             ))}

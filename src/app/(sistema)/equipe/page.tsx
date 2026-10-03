@@ -1,4 +1,5 @@
 import { asc, eq } from 'drizzle-orm';
+import { BotaoExcluir } from '@/components/botao-excluir';
 import { Formulario } from '@/components/formulario';
 import { Botao, Cabecalho, Caixa, Campo, Cartao, Selecao, Selo } from '@/components/ui';
 import { db, schema } from '@/db';
@@ -51,6 +52,7 @@ export default async function Equipe() {
                 {!m.ativo && <Selo>Inativo</Selo>}
               </span>
             }
+            acoes={<BotaoExcluir tipo="membro" id={m.id} confirmar={`Excluir ${m.nome} da equipe?`} />}
           >
             <FormMembro m={m} />
           </Cartao>
