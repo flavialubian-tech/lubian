@@ -24,7 +24,12 @@ export default async function LayoutSistema({ children }: { children: React.Reac
     { href: '/servicos', rotulo: 'Serviços' },
     { href: '/pre-qualificacao', rotulo: 'Pré-qualificação' },
     ...(sessao.membroEquipeId ? [{ href: '/minha-semana', rotulo: 'Minha semana' }] : []),
-    ...(sessao.perfil === 'gestao' ? [{ href: '/usuarios', rotulo: 'Usuários' }] : []),
+    ...(sessao.perfil === 'gestao'
+      ? [
+          { href: '/usuarios', rotulo: 'Usuários' },
+          { href: '/empresa', rotulo: 'Dados da empresa' },
+        ]
+      : []),
   ];
 
   return (
