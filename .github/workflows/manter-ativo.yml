@@ -1,5 +1,5 @@
 # Mantém o sistema ativo no plano grátis: o Supabase pausa o banco depois de ~7 dias sem uso.
-# Todo dia acorda o Render e faz uma consulta no banco pela rota /api/saude.
+# Todo dia acorda o Render e faz uma consulta no banco pela rota /api/saude (src/app/api/saude/route.ts).
 # Endereço: variável do repositório APP_URL (Settings → Secrets and variables → Actions → Variables);
 # sem ela, usa https://lubian-gestao.onrender.com.
 name: Manter ativo
