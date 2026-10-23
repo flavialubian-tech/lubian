@@ -111,6 +111,9 @@ export async function CartaoOperacao({ orc }: { orc: Orcamento }) {
               <a href={`/api/recibos/${sinal.id}`} target="_blank" className="mr-3 inline-block font-semibold text-azul hover:underline">
                 Recibo do sinal (PDF)
               </a>
+              <a href={`/api/recibos/${sinal.id}/whatsapp`} target="_blank" className="mr-3 inline-block font-semibold text-verde hover:underline" data-whats-recibo-sinal>
+                📲 Enviar recibo pelo WhatsApp
+              </a>
               {sinal.comprovante && (
                 <a href={`/api/comprovantes/${sinal.id}`} target="_blank" className="font-semibold text-azul hover:underline">
                   Ver comprovante

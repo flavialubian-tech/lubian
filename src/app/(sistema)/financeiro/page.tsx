@@ -145,6 +145,11 @@ export default async function Financeiro(props: PageProps<'/financeiro'>) {
                       Recibo {reciboHoje.get(c.id)!.reciboNumero} (PDF)
                     </a>
                   )}
+                  {reciboHoje.has(c.id) && (
+                    <a href={`/api/recibos/${reciboHoje.get(c.id)!.id}/whatsapp`} target="_blank" className="mt-1 ml-3 inline-block text-xs font-semibold text-verde hover:underline">
+                      📲 Enviar recibo pelo WhatsApp
+                    </a>
+                  )}
                   {c.status === 'aberta' && (
                     <details className="mt-2 rounded-lg border border-borda p-3 open:bg-slate-50">
                       <summary className="cursor-pointer text-sm font-semibold text-azul">Registrar pagamento</summary>
@@ -182,6 +187,9 @@ export default async function Financeiro(props: PageProps<'/financeiro'>) {
                   <BotaoLink href={`/api/recibos/${p.id}`} target="_blank" variante="fantasma" className="px-2 py-1">
                     Recibo {p.reciboNumero ?? ''}
                   </BotaoLink>
+                  <a href={`/api/recibos/${p.id}/whatsapp`} target="_blank" className="mr-2 text-xs font-semibold text-verde hover:underline" title="Enviar recibo pelo WhatsApp">
+                    📲 WhatsApp
+                  </a>
                   {p.comprovante && (
                     <a href={`/api/comprovantes/${p.id}`} target="_blank" className="text-xs font-semibold text-azul hover:underline">
                       comprovante

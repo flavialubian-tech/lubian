@@ -1,13 +1,18 @@
 import { BotaoExcluir } from '@/components/botao-excluir';
 import { Formulario } from '@/components/formulario';
 import { Botao, Campo, Cartao, Selecao, Selo, cx } from '@/components/ui';
-import type { schema } from '@/db';
+import { eq } from 'drizzle-orm';
+import { db, schema } from '@/db';
 import { hojeSP } from '@/lib/agenda';
 import { situacaoCobranca } from '@/lib/cobranca';
+import { buscarEmpresa } from '@/lib/empresa';
 import { CATEGORIAS_DESPESA, listarCobrancas, listarPagamentos } from '@/lib/financeiro';
-import { dataCurta, moeda, percentual } from '@/lib/formato';
+import { dataCurta, linkWhatsApp, moeda, percentual } from '@/lib/formato';
 import { EMOJI_SEMAFORO } from '@/lib/lucro';
+import { mensagemCobrarSaldo } from '@/lib/mensagens';
+import { pixDaEmpresa } from '@/lib/pix';
 import { custosReais } from '@/lib/relatorios';
+import { urlBase } from '@/lib/url';
 import { registrarPagamentoAcao } from '../../financeiro/actions';
 import { FormPagamento } from '../../financeiro/form-pagamento';
 import { lancarDespesaObraAcao } from '../actions';
@@ -18,11 +23,21 @@ const dataBR = (d: string) => dataCurta(`${d}T12:00:00`);
 /** Contas a receber, Previsto × Realizado e lucro real de um orçamento aprovado. */
 export async function CartaoFinanceiroObra({ orc }: { orc: Orcamento }) {
   const hoje = hojeSP();
-  const [cobrancas, pagamentos, custos] = await Promise.all([
+  const [cobrancas, pagamentos, custos, cliente, obra, empresa, base] = await Promise.all([
     listarCobrancas(orc.empresaId, { orcamentoId: orc.id }),
     listarPagamentos(orc.empresaId, { orcamentoId: orc.id }),
     custosReais(orc.empresaId, [orc.id]),
+    db.query.clientes.findFirst({ where: eq(schema.clientes.id, orc.clienteId) }),
+    db.query.obras.findFirst({ where: eq(schema.obras.id, orc.obraId) }),
+    buscarEmpresa(orc.empresaId),
+    urlBase(),
   ]);
+  // Cobrança do saldo depois da entrega (o recibo de cada pagamento vai por /api/recibos/[id]/whatsapp).
+  const whatsSaldo = (valor: number) =>
+    linkWhatsApp(
+      cliente?.telefone,
+      mensagemCobrarSaldo({ clienteNome: cliente?.nome ?? '', obraNome: obra?.nome ?? 'sua obra', valor, link: `${base}/p/${orc.tokenPublico}`, pix: pixDaEmpresa(empresa, valor, orc.numero) }),
+    );
   const real = custos.get(orc.id)!;
   const pagamentoDe = new Map(pagamentos.map((p) => [p.cobrancaId, p]));
   const r = orc.resultado;
@@ -62,7 +77,22 @@ export async function CartaoFinanceiroObra({ orc }: { orc: Orcamento }) {
                     {c.tipo === 'sinal' ? 'Recibo de sinal' : 'Recibo de quitação'} {p.reciboNumero} (PDF)
                   </a>
                 )}
+                {c.status === 'paga' && p && (
+                  <a href={`/api/recibos/${p.id}/whatsapp`} target="_blank" className="ml-3 inline-block text-xs font-semibold text-verde hover:underline" data-whats-recibo>
+                    📲 Enviar recibo pelo WhatsApp
+                  </a>
+                )}
                 {c.status === 'paga' && p && <BotaoExcluir tipo="pagamento" id={p.id} rotulo="Excluir pagamento" confirmar={"Excluir este pagamento lançado por engano? O recibo deixa de valer, a cobrança volta para \"em aberto\" e, se for o sinal, a agenda volta para pré-reserva."} className="ml-3" />}
+                {c.status === 'aberta' && c.tipo === 'saldo' && orc.entregueEm && (
+                  <a
+                    href={whatsSaldo(Number(c.valor))}
+                    target="_blank"
+                    className="mt-2 inline-flex items-center gap-1 rounded-lg bg-verde px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-700"
+                    data-whats-saldo
+                  >
+                    📲 Cobrar saldo pelo WhatsApp (serviço finalizado + Pix)
+                  </a>
+                )}
                 {c.status === 'aberta' && c.tipo === 'saldo' && orc.entregueEm && (
                   <details className="mt-2">
                     <summary className="cursor-pointer text-xs font-semibold text-azul">Registrar quitação</summary>

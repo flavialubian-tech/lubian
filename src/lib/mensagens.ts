@@ -99,3 +99,35 @@ export function mensagemCobranca(d: { clienteNome: string; descricao: string; re
     ...blocoPix(d.pix),
   ].join('\n');
 }
+
+/** Recibo enviado logo depois de registrar o pagamento (sinal, saldo/quitação ou fatura). */
+export function mensagemRecibo(d: { clienteNome: string; tipo: 'sinal' | 'saldo' | 'fatura'; valor: number; numero?: string | null; obraNome?: string | null; link: string }) {
+  const oQue = d.tipo === 'sinal' ? 'o Pix do sinal' : d.tipo === 'saldo' ? 'o pagamento final (quitação)' : 'o pagamento da fatura';
+  return [
+    `Olá, ${primeiroNome(d.clienteNome)}! 😊`,
+    '',
+    `Recebemos ${oQue}${d.obraNome ? ` de ${d.obraNome}` : ''}: *${moeda(d.valor)}*. Muito obrigada! 💙`,
+    ...(d.tipo === 'sinal' ? ['A data da força-tarefa está *confirmada* na nossa agenda. 🗓️'] : []),
+    '',
+    `Segue o seu recibo${d.numero ? ` ${d.numero}` : ''} (é só abrir e salvar em PDF):`,
+    d.link,
+  ].join('\n');
+}
+
+/** Cobrança do saldo quando o serviço é entregue: aviso de finalização + Pix. */
+export function mensagemCobrarSaldo(d: { clienteNome: string; obraNome: string; valor: number; link: string; pix?: string | null }) {
+  return [
+    `Olá, ${primeiroNome(d.clienteNome)}! 😊`,
+    '',
+    `A equipe da Lubian *finalizou o serviço* em ${d.obraNome}. ✨ Foi um prazer cuidar do seu espaço!`,
+    '',
+    'Pedimos que confira tudo com calma. Estando aprovado, é só realizar o pagamento do saldo:',
+    `💼 Saldo final: *${moeda(d.valor)}*`,
+    '',
+    `No link abaixo tem o QR Code do Pix e, depois do pagamento, o seu recibo:`,
+    d.link,
+    '',
+    'Qualquer ajuste, é só nos chamar por aqui. 🤝',
+    ...blocoPix(d.pix),
+  ].join('\n');
+}
