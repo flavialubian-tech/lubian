@@ -321,9 +321,11 @@ export const pagamentos = pgTable('pagamentos', {
   comprovante: text('comprovante'),
   /** Número do recibo (REC-AAAA-NNNN), atribuído no primeiro recibo gerado. */
   reciboNumero: text('recibo_numero'),
+  /** Link público do recibo (/r/[token]) enviado ao cliente pelo WhatsApp; criado no primeiro envio. */
+  tokenPublico: text('token_publico'),
   registradoPorId: uuid('registrado_por_id').references(() => usuarios.id),
   criadoEm: criadoEm(),
-});
+}, (t) => [uniqueIndex('pagamentos_token_idx').on(t.tokenPublico)]);
 
 /** Clientes recorrentes (diárias em dias fixos da semana, fatura mensal). */
 export const contratos = pgTable('contratos', {

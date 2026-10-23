@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { and, eq, ne } from 'drizzle-orm';
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
@@ -9,8 +9,10 @@ import { Botao, BotaoLink } from '@/components/ui';
 import { db, schema } from '@/db';
 import { dataCurta, dataHora, linkWhatsApp, moeda } from '@/lib/formato';
 import { dataExpiracao, situacaoNoFunil } from '@/lib/funil';
+import { dispensaSinal } from '@/lib/contas-receber';
 import { sinalDoOrcamento } from '@/lib/operacao';
 import { pixDaEmpresa } from '@/lib/pix';
+import { tokenDoRecibo } from '@/lib/recibo-publico';
 import { orcamentoPublico } from '@/lib/orcamento-sessao';
 import logo from '../../../../assets/logo-lubian.png';
 import { aprovarAcao } from './actions';
@@ -29,10 +31,27 @@ export default async function OrcamentoCliente(props: PageProps<'/p/[token]'>) {
 
   const r = orc.resultado;
   const expirado = situacaoNoFunil(orc).tipo === 'expirado';
-  // Pix do sinal (copia e cola + QR) enquanto o sinal não foi registrado.
-  const sinalPago = orc.status === 'aprovado' && !!(await sinalDoOrcamento(orc.id));
-  const codigoPix = orc.status === 'aprovado' && !sinalPago ? pixDaEmpresa(empresa, r.sinal, orc.numero) : null;
+  // Depois da aprovação: Pix do que está para pagar agora (sinal; depois da entrega, o saldo) e os recibos.
+  const aprovado = orc.status === 'aprovado';
+  const [sinalPago, semSinal, cobrancas, pagamentos] = aprovado
+    ? await Promise.all([
+        sinalDoOrcamento(orc.id).then(Boolean),
+        dispensaSinal(orc.id),
+        db.query.cobrancas.findMany({ where: and(eq(schema.cobrancas.orcamentoId, orc.id), ne(schema.cobrancas.status, 'cancelada')) }),
+        db.query.pagamentos.findMany({ where: eq(schema.pagamentos.orcamentoId, orc.id), orderBy: (p, { asc }) => [asc(p.criadoEm)] }),
+      ])
+    : [false, false, [], []];
+  const aberta = (tipo: 'sinal' | 'saldo') => cobrancas.find((c) => c.tipo === tipo && c.status === 'aberta');
+  const pagar =
+    aprovado && !sinalPago && !semSinal
+      ? { tipo: 'sinal' as const, valor: Number(aberta('sinal')?.valor ?? r.sinal) }
+      : aprovado && orc.entregueEm && aberta('saldo')
+        ? { tipo: 'saldo' as const, valor: Number(aberta('saldo')!.valor) }
+        : null;
+  const quitado = aprovado && !!orc.entregueEm && !pagar && cobrancas.length > 0 && cobrancas.every((c) => c.status === 'paga');
+  const codigoPix = pagar ? pixDaEmpresa(empresa, pagar.valor, orc.numero) : null;
   const qrPix = codigoPix ? await QRCode.toDataURL(codigoPix, { margin: 1, width: 320 }) : null;
+  const recibos = await Promise.all(pagamentos.map(async (p) => ({ ...p, token: await tokenDoRecibo(p.id) })));
   const falarComEquipe = linkWhatsApp(empresa.telefone, `Olá! Sou ${cliente.nome}, sobre o orçamento ${orc.numero}.`);
 
   return (
@@ -49,15 +68,22 @@ export default async function OrcamentoCliente(props: PageProps<'/p/[token]'>) {
         {orc.status === 'aprovado' ? (
           <div className="space-y-2">
             <p className="text-lg font-bold text-verde">✓ Orçamento aprovado em {dataHora(orc.aprovadoEm)}. Obrigado!</p>
-            {sinalPago ? (
-              <p className="text-sm font-semibold text-verde">✓ Sinal recebido: a data da força-tarefa está confirmada.</p>
-            ) : (
+            {sinalPago && !orc.entregueEm && <p className="text-sm font-semibold text-verde">✓ Sinal recebido: a data da força-tarefa está confirmada.</p>}
+            {quitado && <p className="text-sm font-semibold text-verde">✓ Serviço finalizado e pagamento concluído. Obrigado pela confiança! 💙</p>}
+            {pagar && (
               <>
-                <p className="text-sm">
-                  Para <strong>confirmar a data da força-tarefa</strong>, faça o Pix do sinal de 50%: <strong className="text-azul">{moeda(r.sinal)}</strong>
-                </p>
+                {pagar.tipo === 'sinal' ? (
+                  <p className="text-sm">
+                    Para <strong>confirmar a data da força-tarefa</strong>, faça o Pix do sinal de 50%: <strong className="text-azul">{moeda(pagar.valor)}</strong>
+                  </p>
+                ) : (
+                  <p className="text-sm" data-pagar-saldo>
+                    ✨ <strong>Serviço finalizado</strong> em {dataCurta(orc.entregueEm)}. Estando tudo aprovado, faça o Pix do saldo final:{' '}
+                    <strong className="text-azul">{moeda(pagar.valor)}</strong>
+                  </p>
+                )}
                 {codigoPix && qrPix ? (
-                  <CopiarPix codigo={codigoPix} qr={qrPix} valor={moeda(r.sinal)} />
+                  <CopiarPix codigo={codigoPix} qr={qrPix} valor={moeda(pagar.valor)} />
                 ) : (
                   empresa.chavePix && (
                     <p className="rounded-lg bg-azul-claro px-3 py-2 text-sm">
@@ -67,9 +93,25 @@ export default async function OrcamentoCliente(props: PageProps<'/p/[token]'>) {
                 )}
               </>
             )}
-            <BotaoLink href={falarComEquipe} target="_blank" variante="sucesso">
-              Enviar comprovante pelo WhatsApp
-            </BotaoLink>
+            {pagar && (
+              <BotaoLink href={falarComEquipe} target="_blank" variante="sucesso">
+                Enviar comprovante pelo WhatsApp
+              </BotaoLink>
+            )}
+            {recibos.length > 0 && (
+              <div className="border-t border-borda pt-2 text-sm" data-recibos-cliente>
+                <p className="font-semibold">Seus recibos</p>
+                <ul className="mt-1 space-y-1">
+                  {recibos.map((p) => (
+                    <li key={p.id}>
+                      <a href={`/r/${p.token}`} target="_blank" className="font-semibold text-azul hover:underline">
+                        {p.tipo === 'sinal' ? 'Recibo do sinal' : 'Recibo de quitação'} {p.reciboNumero ?? ''} · {moeda(p.valor)}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         ) : orc.status === 'recusado' ? (
           <p className="text-sm text-cinza">Este orçamento foi encerrado. Fale com a nossa equipe para uma nova proposta.</p>
