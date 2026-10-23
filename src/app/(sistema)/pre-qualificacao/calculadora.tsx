@@ -22,7 +22,7 @@ export function Calculadora({ servicos }: { servicos: Servico[] }) {
 
   const mensagem =
     est && servico
-      ? `Para ${servico.nome.toLowerCase()} em aproximadamente ${area.toLocaleString('pt-BR')} m², o investimento costuma ficar entre ${moeda(est.min)} e ${moeda(est.max)} 💼\n\nO valor oficial sai após a nossa Vistoria Técnica gratuita no local, onde avaliamos acabamentos, nível de resíduos e a força-tarefa necessária. Qual o melhor dia para agendarmos? 🗓️`
+      ? `Para ${servico.nome.toLowerCase()} em aproximadamente ${area.toLocaleString('pt-BR')} m², o investimento costuma ficar entre ${moeda(est.min)} e ${moeda(est.max)}\n\nO valor oficial sai após a nossa Vistoria Técnica gratuita no local, onde avaliamos acabamentos, nível de resíduos e a força-tarefa necessária. Qual o melhor dia para agendarmos?`
       : '';
 
   return (
@@ -59,7 +59,7 @@ export function Calculadora({ servicos }: { servicos: Servico[] }) {
                 setTimeout(() => setCopiado(false), 2000);
               }}
             >
-              {copiado ? 'Copiado ✓' : 'Copiar mensagem'}
+              {copiado ? 'Copiado' : 'Copiar mensagem'}
             </Botao>
           </>
         ) : (
