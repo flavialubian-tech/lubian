@@ -47,3 +47,8 @@ export function backupAtrasado(ultimo: string | null, hoje: string, limite = 3) 
 
 /** Onde o sistema anota a data do último backup bem-sucedido (lido pelo painel). */
 export const ARQUIVO_ULTIMO_BACKUP = '.data/ultimo-backup.txt';
+
+/** Lembrete no Painel (nuvem): baixar uma cópia para fora do Supabase pelo menos a cada `dias`. */
+export function lembrarDeBaixarBackup(ultimoDownload: Date | null, agora = new Date(), dias = 30) {
+  return !ultimoDownload || agora.getTime() - ultimoDownload.getTime() > dias * 86_400_000;
+}

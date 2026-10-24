@@ -72,3 +72,27 @@ Arquivo de texto na pasta do sistema, uma configuração por linha:
 | `BACKUP_DIR=E:\Lubian Backups` | Onde guardar os backups (padrão: `Documentos\Lubian Backups`) |
 | `CHROMIUM_PATH=C:\...\chrome.exe` | Navegador para os PDFs, se a detecção automática falhar |
 | `PORT=3001` | Outra porta, se a 3000 estiver ocupada |
+
+---
+
+# Sistema na nuvem (Render + Supabase): backup
+
+- **Automático:** todo dia o sistema guarda uma cópia de todos os dados no Supabase Storage
+  (`_backups/<empresa>/lubian-AAAA-MM-DD.json.gz`), mantendo 30 diárias + a última de cada mês por 12 meses.
+  Quem dispara é a rota `/api/saude`, que o UptimeRobot chama a cada 5 minutos.
+- **Uma vez por mês, baixe uma cópia** em **Dados da empresa → Backup dos dados → Baixar backup completo agora** e guarde
+  no Google Drive ou no computador. O Painel avisa quando passar de 30 dias sem baixar.
+- O arquivo traz cadastros, orçamentos, agenda, financeiro, pós-venda e produtos. **Fotos e comprovantes** ficam no
+  Storage do Supabase (bucket `lubian`) e não vêm no arquivo.
+
+## Voltar um backup (recuperação)
+1. Crie um projeto **novo** no Supabase (ou um banco vazio) e pegue o endereço do banco (Session pooler).
+2. No computador com o sistema instalado, na pasta do sistema:
+   ```
+   set DATABASE_URL=postgresql://...endereço do banco novo...
+   npm run backup:restaurar -- C:\caminho\lubian-2026-10-24.json.gz
+   ```
+3. No Render, troque a variável `DATABASE_URL` para o banco novo e reinicie o serviço.
+
+A restauração aplica as migrações e recusa um banco que já tenha dados, para não misturar.
+Restaure com a mesma versão do sistema (ou mais nova) que gerou o backup.
