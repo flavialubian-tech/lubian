@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { backupAtrasado, backupsParaApagar, dataDoBackup, diasEntre, nomeBackup } from './backup';
+import { backupAtrasado, backupsParaApagar, dataDoBackup, diasEntre, lembrarDeBaixarBackup, nomeBackup } from './backup';
 
 const dias = (de: string, n: number) =>
   Array.from({ length: n }, (_, i) => nomeBackup(new Date(Date.parse(`${de}T12:00:00Z`) + i * 86_400_000).toISOString().slice(0, 10)));
@@ -37,5 +37,12 @@ describe('backup', () => {
     expect(backupAtrasado(null, '2026-10-02')).toBe(true);
     expect(backupAtrasado('2026-09-29', '2026-10-02')).toBe(false);
     expect(backupAtrasado('2026-09-28', '2026-10-02')).toBe(true);
+  });
+
+  it('lembra de baixar o backup depois de 30 dias', () => {
+    const agora = new Date('2026-10-24T12:00:00Z');
+    expect(lembrarDeBaixarBackup(null, agora)).toBe(true);
+    expect(lembrarDeBaixarBackup(new Date('2026-10-01T12:00:00Z'), agora)).toBe(false);
+    expect(lembrarDeBaixarBackup(new Date('2026-09-20T12:00:00Z'), agora)).toBe(true);
   });
 });

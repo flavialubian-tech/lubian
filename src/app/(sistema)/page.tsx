@@ -8,7 +8,8 @@ import { listarOrcamentos } from '@/lib/consultas';
 import { listarCobrancas } from '@/lib/financeiro';
 import { dataCurta, linkWhatsApp, moeda, percentual } from '@/lib/formato';
 import { mensagemCobrarSinal } from '@/lib/mensagens';
-import { avisoBackup } from '@/lib/modo-local';
+import { avisoBackup, modoLocal } from '@/lib/modo-local';
+import { lembrarDeBaixarBackup } from '@/lib/backup';
 import { CartaoPosVendaPainel } from './pos-venda/cartao-painel';
 import { listarAlocacoes, listarSinaisPendentes } from '@/lib/operacao';
 import { pixDaEmpresa } from '@/lib/pix';
@@ -55,6 +56,14 @@ export default async function Painel() {
         acoes={<BotaoLink href="/orcamentos/novo">+ Novo orçamento</BotaoLink>}
       />
 
+      {sessao.perfil === 'gestao' && !backup && !modoLocal() && lembrarDeBaixarBackup(empresa.backupBaixadoEm) && (
+        <p className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-800" data-lembrete-backup>
+          Faz mais de 30 dias que nenhuma cópia dos dados foi guardada fora do sistema.{' '}
+          <a href="/empresa#backup" className="underline">
+            Baixar backup
+          </a>
+        </p>
+      )}
       {backup && (
         <p className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-vermelho">⚠️ {backup}</p>
       )}

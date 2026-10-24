@@ -32,6 +32,44 @@ async function storage(metodo: 'POST' | 'GET' | 'DELETE', chave: string, corpo?:
   return resposta;
 }
 
+/** Objetos internos no Storage (ex.: backups em "_backups/..."). Só no modo nuvem. */
+export const storageConfigurado = () => naNuvem;
+
+export async function guardarObjeto(chave: string, conteudo: Buffer, tipo: string) {
+  const resposta = await fetch(`${SUPABASE_URL}/storage/v1/object/${BUCKET}/${chave}`, {
+    method: 'POST',
+    headers: { apikey: SUPABASE_CHAVE!, Authorization: `Bearer ${SUPABASE_CHAVE}`, 'Content-Type': tipo, 'x-upsert': 'true' },
+    body: new Uint8Array(conteudo),
+  });
+  if (!resposta.ok) throw new Error(`Supabase Storage: POST ${chave} → ${resposta.status} ${await resposta.text()}`);
+}
+
+export async function lerObjeto(chave: string) {
+  return Buffer.from(await (await storage('GET', chave)).arrayBuffer());
+}
+
+/** Objetos de uma "pasta" do Storage (nome, tamanho em bytes). */
+export async function listarObjetos(pasta: string): Promise<{ nome: string; tamanho: number }[]> {
+  const resposta = await fetch(`${SUPABASE_URL}/storage/v1/object/list/${BUCKET}`, {
+    method: 'POST',
+    headers: { apikey: SUPABASE_CHAVE!, Authorization: `Bearer ${SUPABASE_CHAVE}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prefix: pasta, limit: 1000, offset: 0, sortBy: { column: 'name', order: 'desc' } }),
+  });
+  if (!resposta.ok) throw new Error(`Supabase Storage: listar ${pasta} → ${resposta.status} ${await resposta.text()}`);
+  const itens = (await resposta.json()) as { name: string; id: string | null; metadata?: { size?: number } | null }[];
+  return itens.filter((i) => i.id).map((i) => ({ nome: i.name, tamanho: i.metadata?.size ?? 0 }));
+}
+
+export async function apagarObjetos(chaves: string[]) {
+  if (!chaves.length) return;
+  const resposta = await fetch(`${SUPABASE_URL}/storage/v1/object/${BUCKET}`, {
+    method: 'DELETE',
+    headers: { apikey: SUPABASE_CHAVE!, Authorization: `Bearer ${SUPABASE_CHAVE}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prefixes: chaves }),
+  });
+  if (!resposta.ok) throw new Error(`Supabase Storage: apagar → ${resposta.status} ${await resposta.text()}`);
+}
+
 const IMAGENS: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/heic': 'heic' };
 const TIPOS: Record<string, string> = { ...IMAGENS, 'application/pdf': 'pdf' };
 export const TAMANHO_MAXIMO = 12 * 1024 * 1024;
