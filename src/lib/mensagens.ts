@@ -158,3 +158,18 @@ export function mensagemIndicado(d: { indicadoNome: string; indicadorNome: strin
     'Como posso te ajudar?',
   ].join('\n');
 }
+
+const quantidadeBR = (n: number) => n.toLocaleString('pt-BR', { maximumFractionDigits: 2 });
+
+/** Pedido de cotação ao fornecedor com a lista de produtos de uma obra. */
+export function mensagemCotacao(d: { fornecedorNome?: string | null; itens: { nome: string; unidade: string; quantidade: number }[] }) {
+  return [
+    `Olá${d.fornecedorNome ? `, ${d.fornecedorNome.trim()}` : ''}! Tudo bem?`,
+    '',
+    'Aqui é da Lubian Limpezas. Pode me passar uma cotação destes produtos?',
+    '',
+    ...d.itens.map((i) => `- ${quantidadeBR(i.quantidade)} ${i.unidade || 'un.'} — ${i.nome}`),
+    '',
+    'Se tiver alguma marca equivalente com melhor preço, pode me sugerir. Obrigada!',
+  ].join('\n');
+}

@@ -17,6 +17,8 @@ const FUNCOES = {
   membro: exclusao.excluirMembroEquipe,
   servico: exclusao.excluirServico,
   acerto: exclusao.excluirAcerto,
+  produto: exclusao.excluirProduto,
+  fornecedor: exclusao.excluirFornecedor,
 };
 export type TipoExclusao = keyof typeof FUNCOES;
 

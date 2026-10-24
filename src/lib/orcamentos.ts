@@ -29,6 +29,18 @@ export const entradaPrecificacaoSchema = z.object({
     locacao: valor.optional(),
     outros: valor.optional(),
   }),
+  produtos: z
+    .array(
+      z.object({
+        produtoId: z.string().nullish(),
+        nome: texto.min(1, 'Escolha o produto'),
+        unidade: textoOpcional,
+        quantidade: z.coerce.number().min(0),
+        precoUnitario: valor,
+        fornecedorId: z.string().nullish(),
+      }),
+    )
+    .optional(),
   markup: z.coerce.number().min(0).max(3),
   ancoragem: z.discriminatedUnion('tipo', [
     z.object({ tipo: z.literal('nenhuma') }),

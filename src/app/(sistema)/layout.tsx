@@ -22,6 +22,7 @@ export default async function LayoutSistema({ children }: { children: React.Reac
     { href: '/equipe', rotulo: 'Equipe' },
     { href: '/equipe/acerto', rotulo: 'Acerto da equipe' },
     { href: '/servicos', rotulo: 'Serviços' },
+    { href: '/produtos', rotulo: 'Produtos' },
     { href: '/pre-qualificacao', rotulo: 'Pré-qualificação' },
     ...(sessao.membroEquipeId ? [{ href: '/minha-semana', rotulo: 'Minha semana' }] : []),
     ...(sessao.perfil === 'gestao'

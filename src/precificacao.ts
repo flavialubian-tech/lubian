@@ -2,7 +2,7 @@
  * Motor de precificação da Lubian Limpezas.
  *
  *   Força-Tarefa      = Σ diária × dias de cada profissional
- *   Custo Operacional = Força-Tarefa + custos variáveis
+ *   Custo Operacional = Força-Tarefa + custos variáveis (inclui os produtos do catálogo: Σ quantidade × preço)
  *   Valor Final       = Custo Operacional × (1 + markup)        (markup sobre o custo, 30% a 45%)
  *   Ancoragem         = Valor de Tabela − Desconto = Valor Final
  *
@@ -26,6 +26,18 @@ export interface CustosVariaveis {
   outros?: number;
 }
 
+/** Produto de limpeza usado na obra (preço do catálogo copiado no orçamento, editável). */
+export interface ItemProduto {
+  produtoId?: string | null;
+  nome: string;
+  /** Ex.: "galão 5 L", "litro", "unidade". */
+  unidade: string;
+  quantidade: number;
+  /** Preço de uma unidade, em reais. */
+  precoUnitario: number;
+  fornecedorId?: string | null;
+}
+
 /** Como o Valor de Tabela é definido em cada orçamento (decisão D2). */
 export type Ancoragem =
   | { tipo: 'nenhuma' }
@@ -42,6 +54,8 @@ export interface Arredondamento {
 export interface EntradaOrcamento {
   equipe: MembroForcaTarefa[];
   custosVariaveis: CustosVariaveis;
+  /** Produtos escolhidos do catálogo; o total entra nos custos variáveis. */
+  produtos?: ItemProduto[];
   /** Markup sobre o custo, ex.: 0.35 para 35%. */
   markup: number;
   ancoragem: Ancoragem;
@@ -54,7 +68,10 @@ export interface EntradaOrcamento {
 
 export interface ResultadoOrcamento {
   forcaTarefa: number;
+  /** Inclui `custoProdutos`. */
   custosVariaveis: number;
+  /** Total dos produtos do catálogo (orçamentos antigos não têm). */
+  custoProdutos?: number;
   custoOperacional: number;
   valorFinal: number;
   valorTabela: number;
@@ -72,6 +89,11 @@ export interface ResultadoOrcamento {
 const emCentavos = (reais: number) => Math.round(reais * 100);
 const emReais = (centavos: number) => centavos / 100;
 
+/** Custo total dos produtos, em reais (calculado em centavos). */
+export function custoProdutos(itens: ItemProduto[] | undefined): number {
+  return emReais((itens ?? []).reduce((s, i) => s + Math.round(emCentavos(i.precoUnitario) * (i.quantidade || 0)), 0));
+}
+
 function arredondar(centavos: number, a?: Arredondamento): number {
   if (!a) return centavos;
   const passo = emCentavos(a.passo);
@@ -83,8 +105,9 @@ export function calcularOrcamento(e: EntradaOrcamento): ResultadoOrcamento {
   if (e.markup < 0) throw new Error('Markup não pode ser negativo');
   const forcaTarefa = e.equipe.reduce((s, m) => s + emCentavos(m.diaria) * m.dias, 0);
   const cv = e.custosVariaveis;
-  const custosVariaveis = [cv.transporte, cv.alimentacao, cv.produtosFretes, cv.locacao, cv.outros]
-    .reduce<number>((s, v) => s + emCentavos(v ?? 0), 0);
+  const produtos = emCentavos(custoProdutos(e.produtos));
+  const custosVariaveis =
+    [cv.transporte, cv.alimentacao, cv.produtosFretes, cv.locacao, cv.outros].reduce<number>((s, v) => s + emCentavos(v ?? 0), 0) + produtos;
   const custoOperacional = forcaTarefa + custosVariaveis;
 
   const valorFinal = arredondar(Math.round(custoOperacional * (1 + e.markup)), e.arredondamento);
@@ -115,6 +138,7 @@ export function calcularOrcamento(e: EntradaOrcamento): ResultadoOrcamento {
   return {
     forcaTarefa: emReais(forcaTarefa),
     custosVariaveis: emReais(custosVariaveis),
+    custoProdutos: emReais(produtos),
     custoOperacional: emReais(custoOperacional),
     valorFinal: emReais(valorFinal),
     valorTabela: emReais(valorTabela),

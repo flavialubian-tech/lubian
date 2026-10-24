@@ -158,3 +158,17 @@ export async function excluirAcerto(ctx: Contexto, id: string) {
   await db.update(schema.vales).set({ acertoId: null }).where(eq(schema.vales.acertoId, id));
   await db.delete(schema.acertos).where(eq(schema.acertos.id, id));
 }
+
+/** Produto do catálogo; orçamentos já feitos guardam nome e preço e não mudam. */
+export async function excluirProduto(ctx: Contexto, id: string) {
+  const produto = await db.query.produtos.findFirst({ where: and(eq(schema.produtos.id, id), eq(schema.produtos.empresaId, ctx.empresaId)) });
+  if (!produto) throw new ErroNegocio('Produto não encontrado');
+  await db.delete(schema.produtos).where(eq(schema.produtos.id, id));
+}
+
+/** Fornecedor; os produtos dele ficam sem fornecedor. */
+export async function excluirFornecedor(ctx: Contexto, id: string) {
+  const fornecedor = await db.query.fornecedores.findFirst({ where: and(eq(schema.fornecedores.id, id), eq(schema.fornecedores.empresaId, ctx.empresaId)) });
+  if (!fornecedor) throw new ErroNegocio('Fornecedor não encontrado');
+  await db.delete(schema.fornecedores).where(eq(schema.fornecedores.id, id));
+}

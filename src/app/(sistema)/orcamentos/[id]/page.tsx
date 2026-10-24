@@ -21,6 +21,7 @@ import { BotaoAcao, BotaoEnviarWhatsApp, BotaoMarcarEnviado, CopiarLink } from '
 import { CartaoFinanceiroObra } from './financeiro-obra';
 import { CartaoOperacao } from './operacao';
 import { CartaoPosVenda } from './pos-venda';
+import { CartaoProdutosObra } from './produtos-obra';
 
 const NOMES_EVENTO: Record<string, string> = {
   criado: 'Criado',
@@ -190,6 +191,7 @@ export default async function Orcamento(props: PageProps<'/orcamentos/[id]'>) {
         </Cartao>
       </div>
 
+      <CartaoProdutosObra orc={orc} />
       {orc.status === 'aprovado' && <CartaoOperacao orc={orc} />}
       {orc.status === 'aprovado' && <CartaoFinanceiroObra orc={orc} />}
       {orc.status === 'aprovado' && orc.entregueEm && <CartaoPosVenda orc={orc} clienteNome={orc.cliente.nome} />}

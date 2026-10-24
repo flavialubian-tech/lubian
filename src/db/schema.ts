@@ -459,6 +459,32 @@ export const indicacoes = pgTable('indicacoes', {
   criadoEm: criadoEm(),
 });
 
+/** Fornecedores de produtos de limpeza (ex.: Gmix), para pedir cotação pelo WhatsApp. */
+export const fornecedores = pgTable('fornecedores', {
+  id: id(),
+  empresaId: empresaId(),
+  nome: text('nome').notNull(),
+  telefone: text('telefone'),
+  observacoes: text('observacoes'),
+  criadoEm: criadoEm(),
+});
+
+/** Catálogo de produtos: escolhidos no orçamento, o custo entra no preço (quantidade × preço). */
+export const produtos = pgTable('produtos', {
+  id: id(),
+  empresaId: empresaId(),
+  nome: text('nome').notNull(),
+  /** Ex.: "galão 5 L", "litro", "unidade", "caixa c/ 12". */
+  unidade: text('unidade').notNull().default('unidade'),
+  precoUnitario: dinheiro('preco_unitario').notNull().default('0'),
+  fornecedorId: uuid('fornecedor_id').references(() => fornecedores.id, { onDelete: 'set null' }),
+  observacoes: text('observacoes'),
+  ativo: boolean('ativo').notNull().default(true),
+  /** Quando o preço foi atualizado pela última vez (cotação). */
+  precoAtualizadoEm: timestamp('preco_atualizado_em', { withTimezone: true }).notNull().defaultNow(),
+  criadoEm: criadoEm(),
+});
+
 export const clientesRelations = relations(clientes, ({ many, one }) => ({
   obras: many(obras),
   orcamentos: many(orcamentos),
