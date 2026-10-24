@@ -8,13 +8,14 @@ import type { ConteudoOrcamento } from '@/db/schema';
 import { textoCronograma } from '@/lib/agenda';
 import { moeda, percentual } from '@/lib/formato';
 import type { SalvarOrcamentoInput } from '@/lib/orcamentos';
-import { calcularOrcamento, distribuirValorTabela, MARKUP_MINIMO_PADRAO, type EntradaOrcamento } from '@/precificacao';
+import { calcularOrcamento, custoProdutos, distribuirValorTabela, MARKUP_MINIMO_PADRAO, type EntradaOrcamento } from '@/precificacao';
 import { salvarOrcamentoAcao } from './actions';
 
 export interface OpcoesEditor {
   obras: { id: string; nome: string; clienteId: string; clienteNome: string }[];
   servicos: { id: string; nome: string; exigeNr35: boolean }[];
   equipe: { id: string; nome: string; diaria: number; nr35: boolean }[];
+  produtos: { id: string; nome: string; unidade: string; preco: number; fornecedorId: string | null }[];
 }
 
 export interface EstadoEditor {
@@ -98,7 +99,7 @@ export function EditorOrcamento({ id, inicial, opcoes, somenteLeitura }: { id: s
   const custos: [keyof EntradaOrcamento['custosVariaveis'], string][] = [
     ['transporte', 'Uber / Transporte'],
     ['alimentacao', 'Alimentação / Marmitas'],
-    ['produtosFretes', 'Produtos / Fretes'],
+    ['produtosFretes', 'Fretes / produtos avulsos'],
     ['locacao', 'Locação (andaimes, máquinas)'],
     ['outros', 'Outros'],
   ];
@@ -191,7 +192,55 @@ export function EditorOrcamento({ id, inicial, opcoes, somenteLeitura }: { id: s
           )}
         </Cartao>
 
-        <Cartao titulo="3. Custos variáveis da obra">
+        <Cartao titulo="3. Produtos de limpeza" acoes={<span className="text-sm font-bold text-azul">{moeda(custoProdutos(p.produtos))}</span>}>
+          {opcoes.produtos.length === 0 && !(p.produtos ?? []).length ? (
+            <p className="text-sm text-cinza">
+              Cadastre os produtos (com preço e fornecedor) em <a href="/produtos" className="font-semibold text-azul hover:underline">Produtos</a> para escolher aqui.
+            </p>
+          ) : (
+            <div className="space-y-2" data-produtos-orcamento>
+              {(p.produtos ?? []).map((item, i) => {
+                const lista = p.produtos ?? [];
+                const setItem = (parcial: Partial<(typeof lista)[number]>) => setP({ produtos: lista.map((x, j) => (j === i ? { ...x, ...parcial } : x)) });
+                return (
+                  <div key={i} className="grid grid-cols-[1fr_70px_90px_auto] items-end gap-2 sm:grid-cols-[1fr_80px_100px_90px_auto]">
+                    <Selecao
+                      rotulo={i === 0 ? 'Produto' : undefined}
+                      value={item.produtoId ?? ''}
+                      onChange={(e) => {
+                        const prod = opcoes.produtos.find((x) => x.id === e.target.value);
+                        if (prod) setItem({ produtoId: prod.id, nome: prod.nome, unidade: prod.unidade, precoUnitario: prod.preco, fornecedorId: prod.fornecedorId });
+                      }}
+                    >
+                      <option value="">{item.nome || 'Escolha…'}</option>
+                      {opcoes.produtos.map((x) => (
+                        <option key={x.id} value={x.id}>
+                          {x.nome} ({x.unidade} · {moeda(x.preco)})
+                        </option>
+                      ))}
+                    </Selecao>
+                    <CampoNumero rotulo={i === 0 ? 'Qtd.' : undefined} valor={item.quantidade} aoMudar={(n) => setItem({ quantidade: n })} />
+                    <CampoNumero key={`p${i}-${item.produtoId}`} rotulo={i === 0 ? 'Preço un. R$' : undefined} valor={item.precoUnitario} aoMudar={(n) => setItem({ precoUnitario: n })} />
+                    <span className="hidden pb-2 text-right text-sm font-semibold sm:block">{moeda(custoProdutos([item]))}</span>
+                    <button type="button" className="px-2 pb-2 text-cinza hover:text-vermelho" aria-label="Remover" onClick={() => setP({ produtos: lista.filter((_, j) => j !== i) })}>
+                      ✕
+                    </button>
+                  </div>
+                );
+              })}
+              <button
+                type="button"
+                className="text-sm font-semibold text-azul"
+                onClick={() => setP({ produtos: [...(p.produtos ?? []), { produtoId: null, nome: '', unidade: '', quantidade: 1, precoUnitario: 0, fornecedorId: null }] })}
+              >
+                + Produto
+              </button>
+              <p className="text-xs text-cinza">O preço vem do catálogo e pode ser ajustado aqui só para este orçamento. O total entra nos custos.</p>
+            </div>
+          )}
+        </Cartao>
+
+        <Cartao titulo="4. Outros custos variáveis da obra">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {custos.map(([chave, rotulo]) => (
               <CampoNumero key={chave} rotulo={rotulo} valor={p.custosVariaveis[chave]} aoMudar={(n) => setP({ custosVariaveis: { ...p.custosVariaveis, [chave]: n } })} />
@@ -199,7 +248,7 @@ export function EditorOrcamento({ id, inicial, opcoes, somenteLeitura }: { id: s
           </div>
         </Cartao>
 
-        <Cartao titulo="4. Markup e ancoragem">
+        <Cartao titulo="5. Markup e ancoragem">
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <Rotulo>Markup sobre o custo: {Math.round(p.markup * 100)}%</Rotulo>
@@ -263,7 +312,7 @@ export function EditorOrcamento({ id, inicial, opcoes, somenteLeitura }: { id: s
           </div>
         </Cartao>
 
-        <Cartao titulo="5. Apresentação técnica (o que vai no PDF)">
+        <Cartao titulo="6. Apresentação técnica (o que vai no PDF)">
           <div className="grid gap-4 sm:grid-cols-2">
             <Campo rotulo="Tipo de serviço" value={c.tipoServico} onChange={(e) => setC({ tipoServico: e.target.value })} />
             <Campo rotulo="Cronograma" value={c.cronograma} onChange={(e) => setC({ cronograma: e.target.value })} placeholder={textoCronograma(estado.datasPrevistas) || '02 Dias (Sábado e Domingo)'} />
@@ -363,6 +412,7 @@ export function EditorOrcamento({ id, inicial, opcoes, somenteLeitura }: { id: s
             <dl className="space-y-1.5 text-sm">
               <Linha rotulo="Força-Tarefa" valor={moeda(r.forcaTarefa)} />
               <Linha rotulo="Custos variáveis" valor={moeda(r.custosVariaveis)} />
+              {!!r.custoProdutos && <Linha rotulo="  dos quais produtos" valor={moeda(r.custoProdutos)} />}
               <Linha rotulo="Custo operacional" valor={moeda(r.custoOperacional)} forte />
               <Linha rotulo={`Markup efetivo`} valor={percentual(r.markupEfetivo)} destaque={r.abaixoDoMinimo ? 'vermelho' : 'verde'} />
               <div className="my-2 border-t border-borda" />

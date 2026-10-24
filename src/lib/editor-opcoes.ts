@@ -6,7 +6,7 @@ import { conteudoPadrao } from './padroes';
 import { listarServicosAtivos } from './servicos';
 
 export async function carregarOpcoesEditor(empresaId: string): Promise<OpcoesEditor> {
-  const [obras, servicos, equipe] = await Promise.all([
+  const [obras, servicos, equipe, produtos] = await Promise.all([
     db
       .select({ id: schema.obras.id, nome: schema.obras.nome, clienteId: schema.clientes.id, clienteNome: schema.clientes.nome })
       .from(schema.obras)
@@ -18,8 +18,17 @@ export async function carregarOpcoesEditor(empresaId: string): Promise<OpcoesEdi
       where: and(eq(schema.equipe.empresaId, empresaId), eq(schema.equipe.ativo, true)),
       orderBy: [asc(schema.equipe.funcao), asc(schema.equipe.nome)],
     }),
+    db.query.produtos.findMany({
+      where: and(eq(schema.produtos.empresaId, empresaId), eq(schema.produtos.ativo, true)),
+      orderBy: asc(schema.produtos.nome),
+    }),
   ]);
-  return { obras, servicos, equipe: equipe.map((m) => ({ id: m.id, nome: m.nome, diaria: Number(m.diariaPadrao), nr35: m.nr35 })) };
+  return {
+    obras,
+    servicos,
+    equipe: equipe.map((m) => ({ id: m.id, nome: m.nome, diaria: Number(m.diariaPadrao), nr35: m.nr35 })),
+    produtos: produtos.map((p) => ({ id: p.id, nome: p.nome, unidade: p.unidade, preco: Number(p.precoUnitario), fornecedorId: p.fornecedorId })),
+  };
 }
 
 /** Estado inicial de um orçamento novo, aproveitando a obra e a vistoria quando houver. */

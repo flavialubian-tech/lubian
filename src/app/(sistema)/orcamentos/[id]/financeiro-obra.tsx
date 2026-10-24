@@ -13,6 +13,7 @@ import { mensagemCobrarSaldo } from '@/lib/mensagens';
 import { pixDaEmpresa } from '@/lib/pix';
 import { custosReais } from '@/lib/relatorios';
 import { urlBase } from '@/lib/url';
+import { custoProdutos } from '@/precificacao';
 import { registrarPagamentoAcao } from '../../financeiro/actions';
 import { FormPagamento } from '../../financeiro/form-pagamento';
 import { lancarDespesaObraAcao } from '../actions';
@@ -47,7 +48,7 @@ export async function CartaoFinanceiroObra({ orc }: { orc: Orcamento }) {
     { rotulo: 'Força-tarefa (diárias)', previsto: r.forcaTarefa, realizado: real.diarias },
     { rotulo: 'Transporte', previsto: cv.transporte ?? 0, realizado: d.transporte ?? 0 },
     { rotulo: 'Alimentação', previsto: cv.alimentacao ?? 0, realizado: d.alimentacao ?? 0 },
-    { rotulo: 'Produtos e fretes', previsto: cv.produtosFretes ?? 0, realizado: d.produtos ?? 0 },
+    { rotulo: 'Produtos e fretes', previsto: (cv.produtosFretes ?? 0) + custoProdutos(orc.precificacao.produtos), realizado: d.produtos ?? 0 },
     { rotulo: 'Locação', previsto: cv.locacao ?? 0, realizado: d.locacao ?? 0 },
     { rotulo: 'Outros', previsto: cv.outros ?? 0, realizado: d.outros ?? 0 },
   ];

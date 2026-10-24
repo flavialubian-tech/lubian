@@ -25,3 +25,19 @@ describe('mensagens de recibo e saldo', () => {
     expect(m.endsWith('000201FAKE')).toBe(true);
   });
 });
+
+describe('cotação com o fornecedor', () => {
+  it('lista quantidade, unidade e produto', async () => {
+    const { mensagemCotacao } = await import('./mensagens');
+    const m = mensagemCotacao({
+      fornecedorNome: 'Gmix',
+      itens: [
+        { nome: 'Detergente neutro', unidade: 'galão 5 L', quantidade: 2 },
+        { nome: 'Removedor de cimento', unidade: 'litro', quantidade: 1.5 },
+      ],
+    });
+    expect(m).toMatch(/^Olá, Gmix! Tudo bem\?/);
+    expect(m).toContain('- 2 galão 5 L — Detergente neutro');
+    expect(m).toContain('- 1,5 litro — Removedor de cimento');
+  });
+});

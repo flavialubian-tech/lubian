@@ -36,6 +36,13 @@
       "when": 1792817619805,
       "tag": "0004_pos_venda",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792818647387,
+      "tag": "0005_produtos",
+      "breakpoints": true
     }
   ]
 }

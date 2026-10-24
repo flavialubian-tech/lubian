@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { calcularOrcamento, distribuirValorTabela } from './precificacao';
+import { calcularOrcamento, custoProdutos, distribuirValorTabela } from './precificacao';
 
 describe('calcularOrcamento', () => {
   it('reproduz a planilha: custo R$ 1.465 × 1,35 = R$ 1.977 com desconto de parceria R$ 500', () => {
@@ -68,6 +68,31 @@ describe('calcularOrcamento', () => {
         ancoragem: { tipo: 'valor_tabela', valor: 1000 },
       }),
     ).toThrow();
+  });
+});
+
+describe('produtos do catálogo', () => {
+  const produtos = [
+    { nome: 'Detergente neutro', unidade: 'galão 5 L', quantidade: 2, precoUnitario: 32.9 },
+    { nome: 'Removedor de cimento', unidade: 'litro', quantidade: 3, precoUnitario: 18.45 },
+    { nome: 'Esponja', unidade: 'unidade', quantidade: 0.5, precoUnitario: 3.33 },
+  ];
+
+  it('soma quantidade × preço em centavos', () => {
+    // 65,80 + 55,35 + 1,665 (arredonda 1,67) = 122,82
+    expect(custoProdutos(produtos)).toBe(122.82);
+    expect(custoProdutos([])).toBe(0);
+    expect(custoProdutos(undefined)).toBe(0);
+  });
+
+  it('entra nos custos variáveis e no custo operacional', () => {
+    const sem = calcularOrcamento({ equipe: [{ nome: 'A', diaria: 200, dias: 2 }], custosVariaveis: { produtosFretes: 20 }, markup: 0.35, ancoragem: { tipo: 'nenhuma' } });
+    const com = calcularOrcamento({ equipe: [{ nome: 'A', diaria: 200, dias: 2 }], custosVariaveis: { produtosFretes: 20 }, produtos, markup: 0.35, ancoragem: { tipo: 'nenhuma' } });
+    expect(sem.custoProdutos).toBe(0);
+    expect(com.custoProdutos).toBe(122.82);
+    expect(com.custosVariaveis).toBe(142.82);
+    expect(com.custoOperacional).toBe(542.82);
+    expect(com.valorFinal).toBe(732.81); // 542,82 × 1,35 = 732,807
   });
 });
 
