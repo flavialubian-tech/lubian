@@ -9,6 +9,7 @@ import { listarCobrancas } from '@/lib/financeiro';
 import { dataCurta, linkWhatsApp, moeda, percentual } from '@/lib/formato';
 import { mensagemCobrarSinal } from '@/lib/mensagens';
 import { avisoBackup } from '@/lib/modo-local';
+import { CartaoPosVendaPainel } from './pos-venda/cartao-painel';
 import { listarAlocacoes, listarSinaisPendentes } from '@/lib/operacao';
 import { pixDaEmpresa } from '@/lib/pix';
 
@@ -138,6 +139,8 @@ export default async function Painel() {
             </ul>
           )}
         </Cartao>
+
+        <CartaoPosVendaPainel empresaId={sessao.empresaId} />
 
         <Cartao titulo="Sinal pendente">
           {sinais.length === 0 ? (

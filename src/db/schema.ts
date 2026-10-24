@@ -52,6 +52,8 @@ export const empresas = pgTable('empresas', {
   cidade: text('cidade'),
   logoUrl: text('logo_url'),
   chavePix: text('chave_pix'),
+  /** Link "avaliar no Google" (perfil da empresa no Google), oferecido a quem dá 4 ou 5 estrelas. */
+  linkAvaliacaoGoogle: text('link_avaliacao_google'),
   criadoEm: criadoEm(),
 });
 
@@ -418,6 +420,42 @@ export const vales = pgTable('vales', {
   data: date('data', { mode: 'string' }).notNull(),
   descricao: text('descricao'),
   acertoId: uuid('acerto_id').references(() => acertos.id, { onDelete: 'set null' }),
+  criadoEm: criadoEm(),
+});
+
+/** Pós-venda: nota de 1 a 5 estrelas que o cliente dá pelo link depois da entrega (uma por orçamento). */
+export const avaliacoes = pgTable(
+  'avaliacoes',
+  {
+    id: id(),
+    empresaId: empresaId(),
+    orcamentoId: uuid('orcamento_id')
+      .notNull()
+      .references(() => orcamentos.id, { onDelete: 'cascade' }),
+    clienteId: uuid('cliente_id')
+      .notNull()
+      .references(() => clientes.id, { onDelete: 'cascade' }),
+    nota: integer('nota').notNull(),
+    comentario: text('comentario'),
+    /** Nota baixa: quando a Gestão marcou que já conversou com o cliente. */
+    tratadoEm: timestamp('tratado_em', { withTimezone: true }),
+    criadoEm: criadoEm(),
+  },
+  (t) => [uniqueIndex('avaliacoes_orcamento_idx').on(t.orcamentoId)],
+);
+
+/** Pessoas indicadas pelo cliente na avaliação; cada uma vira um cliente com "indicado por". */
+export const indicacoes = pgTable('indicacoes', {
+  id: id(),
+  empresaId: empresaId(),
+  avaliacaoId: uuid('avaliacao_id').references(() => avaliacoes.id, { onDelete: 'set null' }),
+  indicadoPorId: uuid('indicado_por_id')
+    .notNull()
+    .references(() => clientes.id, { onDelete: 'cascade' }),
+  clienteId: uuid('cliente_id')
+    .notNull()
+    .references(() => clientes.id, { onDelete: 'cascade' }),
+  contatadoEm: timestamp('contatado_em', { withTimezone: true }),
   criadoEm: criadoEm(),
 });
 

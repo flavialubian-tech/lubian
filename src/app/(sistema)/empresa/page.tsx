@@ -38,6 +38,17 @@ export default async function DadosEmpresa() {
             <p className="text-xs text-cinza">
               O dinheiro cai na conta onde esta chave está cadastrada. Depois de trocar, faça o Pix de teste ao lado.
             </p>
+            <Campo
+              rotulo="Link para avaliar no Google (opcional)"
+              name="linkAvaliacaoGoogle"
+              type="url"
+              placeholder="https://g.page/r/.../review"
+              defaultValue={empresa.linkAvaliacaoGoogle ?? ''}
+            />
+            <p className="text-xs text-cinza">
+              No Perfil da Empresa no Google, clique em <strong>Pedir avaliações</strong> e copie o link. Quem dá 4 ou 5 estrelas na pesquisa
+              do sistema é convidado a avaliar a Lubian no Google.
+            </p>
             <Botao type="submit">Salvar</Botao>
           </Formulario>
         </Cartao>

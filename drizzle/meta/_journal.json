@@ -29,6 +29,13 @@
       "when": 1792792907015,
       "tag": "0003_recibo_publico",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792817619805,
+      "tag": "0004_pos_venda",
+      "breakpoints": true
     }
   ]
 }

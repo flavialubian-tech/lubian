@@ -52,6 +52,7 @@ export default async function OrcamentoCliente(props: PageProps<'/p/[token]'>) {
   const codigoPix = pagar ? pixDaEmpresa(empresa, pagar.valor, orc.numero) : null;
   const qrPix = codigoPix ? await QRCode.toDataURL(codigoPix, { margin: 1, width: 320 }) : null;
   const recibos = await Promise.all(pagamentos.map(async (p) => ({ ...p, token: await tokenDoRecibo(p.id) })));
+  const avaliado = aprovado && !!(await db.query.avaliacoes.findFirst({ where: eq(schema.avaliacoes.orcamentoId, orc.id), columns: { id: true } }));
   const falarComEquipe = linkWhatsApp(empresa.telefone, `Olá! Sou ${cliente.nome}, sobre o orçamento ${orc.numero}.`);
 
   return (
@@ -69,7 +70,12 @@ export default async function OrcamentoCliente(props: PageProps<'/p/[token]'>) {
           <div className="space-y-2">
             <p className="text-lg font-bold text-verde">✓ Orçamento aprovado em {dataHora(orc.aprovadoEm)}. Obrigado!</p>
             {sinalPago && !orc.entregueEm && <p className="text-sm font-semibold text-verde">✓ Sinal recebido: a data da força-tarefa está confirmada.</p>}
-            {quitado && <p className="text-sm font-semibold text-verde">✓ Serviço finalizado e pagamento concluído. Obrigado pela confiança! 💙</p>}
+            {quitado && <p className="text-sm font-semibold text-verde">✓ Serviço finalizado e pagamento concluído. Obrigado pela confiança!</p>}
+            {aprovado && orc.entregueEm && !avaliado && (
+              <BotaoLink href={`/p/${token}/avaliar`} variante="secundario" data-convite-avaliar>
+                Avalie nosso serviço (1 minuto)
+              </BotaoLink>
+            )}
             {pagar && (
               <>
                 {pagar.tipo === 'sinal' ? (

@@ -20,11 +20,16 @@ export default async function Cliente(props: PageProps<'/clientes/[id]'>) {
   });
   if (!cliente) notFound();
 
-  const [obras, orcamentos, parceiros] = await Promise.all([
+  const [obras, orcamentos, listaParceiros, indicador] = await Promise.all([
     db.query.obras.findMany({ where: eq(schema.obras.clienteId, id), orderBy: asc(schema.obras.nome) }),
     listarOrcamentos(sessao.empresaId, { clienteId: id }),
     listarParceiros(sessao.empresaId),
+    cliente.indicadoPorId
+      ? db.query.clientes.findFirst({ where: eq(schema.clientes.id, cliente.indicadoPorId), columns: { id: true, nome: true } })
+      : Promise.resolve(undefined),
   ]);
+  // Quem indicou pode ser um cliente comum (indicação pela avaliação): entra na lista para não se perder ao salvar.
+  const parceiros = indicador && !listaParceiros.some((p) => p.id === indicador.id) ? [indicador, ...listaParceiros] : listaParceiros;
 
   return (
     <>
