@@ -131,3 +131,30 @@ export function mensagemCobrarSaldo(d: { clienteNome: string; obraNome: string; 
     ...blocoPix(d.pix),
   ].join('\n');
 }
+
+/** Pós-venda: agradecimento + link da avaliação (estrelas, Google e indicações). */
+export function mensagemPedirAvaliacao(d: { clienteNome: string; obraNome: string; link: string }) {
+  return [
+    `Olá, ${primeiroNome(d.clienteNome)}!`,
+    '',
+    `Muito obrigada por confiar na Lubian Limpezas para cuidar de ${d.obraNome}. Foi um prazer!`,
+    '',
+    'Sua opinião é muito importante para nós. Pode nos contar como foi a experiência? Leva menos de 1 minuto:',
+    d.link,
+    '',
+    'E se conhecer alguém que precise de uma limpeza caprichada, no mesmo link dá para nos indicar. Agradecemos de coração!',
+  ].join('\n');
+}
+
+/** Primeiro contato com quem foi indicado por um cliente. */
+export function mensagemIndicado(d: { indicadoNome: string; indicadorNome: string }) {
+  return [
+    `Olá, ${primeiroNome(d.indicadoNome)}! Tudo bem?`,
+    '',
+    `Aqui é da Lubian Limpezas. ${d.indicadorNome.trim()} nos indicou para você e ficamos muito felizes com a confiança!`,
+    '',
+    'Somos especializados em limpeza pós-obra e limpeza técnica de alto padrão. Se estiver precisando, fazemos um orçamento sem compromisso, com vistoria técnica no local.',
+    '',
+    'Como posso te ajudar?',
+  ].join('\n');
+}

@@ -27,7 +27,7 @@ export function FormCliente({ cliente, parceiros }: { cliente?: Cliente; parceir
         defaultValue={c?.saudacao ?? ''}
         placeholder="Ex.: Querida Katiane / Prezado Christian"
       />
-      <Selecao rotulo="Indicado por (parceiro)" name="indicadoPorId" defaultValue={c?.indicadoPorId ?? ''}>
+      <Selecao rotulo="Indicado por" name="indicadoPorId" defaultValue={c?.indicadoPorId ?? ''}>
         <option value="">— ninguém —</option>
         {parceiros
           .filter((p) => p.id !== c?.id)

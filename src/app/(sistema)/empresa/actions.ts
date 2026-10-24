@@ -17,6 +17,8 @@ export async function salvarEmpresa(_: EstadoForm, f: FormData): Promise<EstadoF
     if (!nome) return { erro: 'Informe o nome da empresa' };
     const erroPix = chavePix ? erroChavePix(chavePix) : null;
     if (erroPix) return { erro: `Chave Pix: ${erroPix}` };
+    const linkAvaliacaoGoogle = campo(f, 'linkAvaliacaoGoogle');
+    if (linkAvaliacaoGoogle && !/^https:\/\/\S+$/.test(linkAvaliacaoGoogle)) return { erro: 'Link do Google: cole o endereço completo, começando com https://' };
     await db
       .update(schema.empresas)
       .set({
@@ -26,6 +28,7 @@ export async function salvarEmpresa(_: EstadoForm, f: FormData): Promise<EstadoF
         endereco: campo(f, 'endereco'),
         cidade: campo(f, 'cidade'),
         chavePix,
+        linkAvaliacaoGoogle,
       })
       .where(eq(schema.empresas.id, sessao.empresaId));
     revalidatePath('/', 'layout');
