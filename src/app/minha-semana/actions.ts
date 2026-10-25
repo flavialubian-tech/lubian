@@ -10,7 +10,7 @@ export async function marcarPresencaAcao(alocacaoId: string, presenca: 'presente
   const sessao = await exigirSessao();
   return executarAcao(async () => {
     await marcarPresenca(sessao, alocacaoId, presenca);
-    revalidatePath('/minha-semana');
-    revalidatePath('/agenda');
+    // Presença alimenta agenda, acerto da equipe e lucro real da obra.
+    revalidatePath('/', 'layout');
   });
 }

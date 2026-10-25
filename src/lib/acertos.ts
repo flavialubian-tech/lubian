@@ -23,6 +23,7 @@ async function buscarMembro(empresaId: string, id: string) {
 function alocacoesDoPeriodo(empresaId: string, membroEquipeId: string, de: string, ate: string) {
   return db
     .select({
+      id: schema.alocacoes.id,
       data: schema.alocacoes.data,
       status: schema.alocacoes.status,
       presenca: schema.alocacoes.presenca,

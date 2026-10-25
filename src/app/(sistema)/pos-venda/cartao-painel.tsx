@@ -13,7 +13,14 @@ export async function CartaoPosVendaPainel({ empresaId }: { empresaId: string })
   return (
     <Cartao
       titulo="Pós-venda"
-      acoes={resumo.total > 0 && resumo.media != null ? <Selo cor="verde">★ {resumo.media.toFixed(1).replace('.', ',')} · {resumo.total} avaliação(ões)</Selo> : undefined}
+      acoes={
+        <span className="flex items-center gap-2">
+          {resumo.total > 0 && resumo.media != null && <Selo cor="verde">★ {resumo.media.toFixed(1).replace('.', ',')} · {resumo.total} avaliação(ões)</Selo>}
+          <Link href="/pos-venda" className="text-sm font-semibold text-azul hover:underline">
+            Ver tudo
+          </Link>
+        </span>
+      }
     >
       {vazio ? (
         <Vazio>Nenhuma avaliação para pedir nem indicação para chamar.</Vazio>

@@ -7,7 +7,7 @@ import { listarAlocacoes } from '@/lib/operacao';
 import { podeOperar } from '@/lib/permissoes';
 import logo from '../../../assets/logo-lubian.png';
 import { sair } from '../login/actions';
-import { BotoesPresenca } from './presenca';
+import { BotoesPresenca } from '@/components/botoes-presenca';
 
 export const metadata = { title: 'Minha semana' };
 

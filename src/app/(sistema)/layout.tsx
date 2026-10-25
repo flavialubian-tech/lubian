@@ -16,6 +16,7 @@ export default async function LayoutSistema({ children }: { children: React.Reac
     { href: '/contratos', rotulo: 'Contratos' },
     { href: '/despesas', rotulo: 'Despesas' },
     { href: '/relatorios', rotulo: 'Relatórios' },
+    { href: '/pos-venda', rotulo: 'Pós-venda' },
     { href: '/vistorias', rotulo: 'Vistorias' },
     { href: '/clientes', rotulo: 'Clientes' },
     { href: '/obras', rotulo: 'Obras' },

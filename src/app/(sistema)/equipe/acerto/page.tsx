@@ -1,6 +1,7 @@
 import { and, asc, eq } from 'drizzle-orm';
 import Link from 'next/link';
 import { BotaoExcluir } from '@/components/botao-excluir';
+import { BotoesPresenca } from '@/components/botoes-presenca';
 import { Formulario } from '@/components/formulario';
 import { Botao, Cabecalho, Campo, Cartao, Selo, Tabela, Vazio } from '@/components/ui';
 import { db, schema } from '@/db';
@@ -15,7 +16,6 @@ import { fecharAcertoAcao, lancarValeAcao, marcarAcertoPagoAcao, removerValeAcao
 export const metadata = { title: 'Acerto da equipe' };
 
 const dataBR = (d: string) => dataCurta(`${d}T12:00:00`);
-const PRESENCA = { presente: <Selo cor="verde">Presente</Selo>, falta: <Selo cor="vermelho">Falta</Selo> };
 
 export default async function Acerto(props: PageProps<'/equipe/acerto'>) {
   const sessao = await exigirOperador();
@@ -75,7 +75,9 @@ export default async function Acerto(props: PageProps<'/equipe/acerto'>) {
                       <td className="px-3 py-2">
                         {a.obraNome} <span className="text-xs text-cinza">{a.numero}</span>
                       </td>
-                      <td className="px-3 py-2">{a.presenca ? PRESENCA[a.presenca] : <Selo>Sem registro</Selo>}</td>
+                      <td className="px-3 py-2">
+                        {a.data <= hoje ? <BotoesPresenca alocacaoId={a.id} presenca={a.presenca} /> : <Selo>Agendado</Selo>}
+                      </td>
                       <td className="px-3 py-2 text-right font-semibold">{linha ? moeda(linha.diaria) : '—'}</td>
                     </tr>
                   );

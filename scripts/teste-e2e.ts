@@ -28,6 +28,8 @@ const page = await ctx.newPage();
 const erros: string[] = [];
 page.on('pageerror', (e) => erros.push(e.message));
 page.on('console', (m) => m.type() === 'error' && erros.push(m.text()));
+// Recurso não encontrado: registra o endereço (a mensagem do console não diz qual foi).
+page.on('response', (r) => r.status() === 404 && erros.push(`404 em ${r.url()} (página ${page.url()})`));
 
 const passo = async (nome: string, fn: () => Promise<void>) => {
   process.stdout.write(`• ${nome}… `);

@@ -7,7 +7,10 @@ import { BotaoLink, Cabecalho, Cartao, Selo, Vazio } from '@/components/ui';
 import { db, schema } from '@/db';
 import { exigirOperador } from '@/lib/auth';
 import { listarOrcamentos } from '@/lib/consultas';
-import { linkWhatsApp, moeda } from '@/lib/formato';
+import { dataCurta, linkWhatsApp, moeda } from '@/lib/formato';
+import { listarAvaliacoes, listarIndicacoes } from '@/lib/pos-venda';
+import { notaBaixa } from '@/lib/pos-venda-regras';
+import { estrelas } from '../../orcamentos/[id]/pos-venda';
 import { listarParceiros } from '@/lib/parceiros';
 import { TIPOS_CLIENTE } from '@/lib/rotulos';
 import { FormCliente } from '../form-cliente';
@@ -27,6 +30,11 @@ export default async function Cliente(props: PageProps<'/clientes/[id]'>) {
     cliente.indicadoPorId
       ? db.query.clientes.findFirst({ where: eq(schema.clientes.id, cliente.indicadoPorId), columns: { id: true, nome: true } })
       : Promise.resolve(undefined),
+  ]);
+  const [avaliacoes, indicou, foiIndicado] = await Promise.all([
+    listarAvaliacoes(sessao.empresaId, { clienteId: id }),
+    listarIndicacoes(sessao.empresaId, { indicadoPorId: id }),
+    listarIndicacoes(sessao.empresaId, { clienteId: id }),
   ]);
   // Quem indicou pode ser um cliente comum (indicação pela avaliação): entra na lista para não se perder ao salvar.
   const parceiros = indicador && !listaParceiros.some((p) => p.id === indicador.id) ? [indicador, ...listaParceiros] : listaParceiros;
@@ -100,6 +108,50 @@ export default async function Cliente(props: PageProps<'/clientes/[id]'>) {
               </ul>
             )}
           </Cartao>
+          {(avaliacoes.length > 0 || indicou.length > 0 || foiIndicado.length > 0) && (
+            <Cartao titulo="Pós-venda" acoes={<Link href="/pos-venda" className="text-sm font-semibold text-azul hover:underline">Ver tudo</Link>}>
+              <div className="space-y-3 text-sm" data-posvenda-cliente>
+                {avaliacoes.map((a) => (
+                  <div key={a.id}>
+                    <p>
+                      <span className={notaBaixa(a.nota) ? 'text-vermelho' : 'text-amber-500'}>{estrelas(a.nota)}</span>{' '}
+                      <span className="text-xs text-cinza">
+                        {dataCurta(a.criadoEm)} ·{' '}
+                        <Link href={`/orcamentos/${a.orcamentoId}`} className="hover:underline">
+                          {a.numero}
+                        </Link>
+                      </span>
+                    </p>
+                    {a.comentario && <p className="italic">“{a.comentario}”</p>}
+                  </div>
+                ))}
+                {indicou.length > 0 && (
+                  <div>
+                    <p className="font-semibold">Indicou</p>
+                    <ul>
+                      {indicou.map((i) => (
+                        <li key={i.id}>
+                          <Link href={`/clientes/${i.clienteId}`} className="text-azul hover:underline">
+                            {i.nome}
+                          </Link>{' '}
+                          <span className="text-xs text-cinza">{i.orcamentos > 0 ? '· pediu orçamento' : i.contatadoEm ? '· contatado' : '· chamar'}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {foiIndicado.map((i) => (
+                  <p key={i.id}>
+                    Indicado(a) por{' '}
+                    <Link href={`/clientes/${i.indicadoPorId}`} className="font-semibold text-azul hover:underline">
+                      {i.indicadorNome}
+                    </Link>{' '}
+                    <span className="text-xs text-cinza">em {dataCurta(i.criadoEm)}</span>
+                  </p>
+                ))}
+              </div>
+            </Cartao>
+          )}
         </div>
       </div>
     </>

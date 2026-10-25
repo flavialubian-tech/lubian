@@ -1,6 +1,7 @@
 import { and, eq } from 'drizzle-orm';
 import Link from 'next/link';
 import { BotaoExcluir } from '@/components/botao-excluir';
+import { BotoesPresenca } from '@/components/botoes-presenca';
 import { Formulario } from '@/components/formulario';
 import { SeletorDatas } from '@/components/seletor-datas';
 import { Botao, Campo, Cartao, Selecao, Selo } from '@/components/ui';
@@ -46,6 +47,7 @@ export async function CartaoOperacao({ orc }: { orc: Orcamento }) {
   const outros = new Map(todasAlocacoes.map((a) => [a.orcamentoId, `${a.numero} · ${a.obraNome}`]));
   const status = orc.entregueEm ? 'concluida' : ativas.length === 0 ? (minhas.length ? 'cancelada' : null) : sinal || semSinal ? 'confirmada' : 'pre_reserva';
   const r = orc.resultado;
+  const hoje = hojeSP();
 
   return (
     <Cartao titulo="Agenda, sinal e entrega" className="mb-6" acoes={status && SELO_ALOCACAO[status]}>
@@ -58,20 +60,36 @@ export async function CartaoOperacao({ orc }: { orc: Orcamento }) {
               Sem cadastro na equipe (fora da agenda): {naoEncontrados.join(', ')}.
             </p>
           )}
-          <ul className="space-y-1">
-            {datas.map((d) => (
-              <li key={d}>
-                <strong>
-                  {nomeDia(d)} {diaMes(d)}
-                </strong>
-                :{' '}
-                {ativas
-                  .filter((a) => a.data === d)
-                  .map((a) => nome.get(a.membroEquipeId) ?? '?')
-                  .join(', ') || <span className="text-cinza">ninguém escalado</span>}
-              </li>
-            ))}
+          <ul className="space-y-2" data-escala>
+            {datas.map((d) => {
+              const doDia = ativas.filter((a) => a.data === d);
+              return (
+                <li key={d}>
+                  <strong>
+                    {nomeDia(d)} {diaMes(d)}
+                  </strong>
+                  {doDia.length === 0 ? (
+                    <span className="text-cinza">: ninguém escalado</span>
+                  ) : d <= hoje ? (
+                    // Dia que já chegou: confirmar quem trabalhou (alimenta o acerto da equipe).
+                    <ul className="mt-1 space-y-1 pl-2">
+                      {doDia.map((a) => (
+                        <li key={a.id} className="flex flex-wrap items-center justify-between gap-2">
+                          <span>{nome.get(a.membroEquipeId) ?? '?'}</span>
+                          <BotoesPresenca alocacaoId={a.id} presenca={a.presenca} />
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <>: {doDia.map((a) => nome.get(a.membroEquipeId) ?? '?').join(', ')}</>
+                  )}
+                </li>
+              );
+            })}
           </ul>
+          {datas.some((d) => d <= hoje) && ativas.some((a) => a.data <= hoje && !a.presenca) && (
+            <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">Confirme a presença de quem trabalhou: o acerto da equipe só paga as diárias marcadas como Presente.</p>
+          )}
           {avisos.map((c, i) => (
             <p key={i} className="rounded-lg bg-red-50 px-3 py-2 text-xs font-semibold text-vermelho">
               ⚠️ Conflito: {nome.get(c.membroEquipeId)} em {diaMes(c.data)} —{' '}

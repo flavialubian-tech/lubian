@@ -141,3 +141,54 @@ export async function resumoAvaliacoes(empresaId: string) {
   return { total: r?.total ?? 0, media: r?.media ?? null };
 }
 
+
+/** Todas as avaliações (mais novas primeiro), com cliente, obra e quantas indicações vieram junto. */
+export function listarAvaliacoes(empresaId: string, filtro?: { clienteId?: string }) {
+  return db
+    .select({
+      id: schema.avaliacoes.id,
+      nota: schema.avaliacoes.nota,
+      comentario: schema.avaliacoes.comentario,
+      criadoEm: schema.avaliacoes.criadoEm,
+      tratadoEm: schema.avaliacoes.tratadoEm,
+      orcamentoId: schema.avaliacoes.orcamentoId,
+      numero: schema.orcamentos.numero,
+      clienteId: schema.clientes.id,
+      clienteNome: schema.clientes.nome,
+      obraNome: schema.obras.nome,
+      indicacoes: sql<number>`(select count(*)::int from ${schema.indicacoes} where ${schema.indicacoes.avaliacaoId} = ${schema.avaliacoes.id})`,
+    })
+    .from(schema.avaliacoes)
+    .innerJoin(schema.clientes, eq(schema.clientes.id, schema.avaliacoes.clienteId))
+    .innerJoin(schema.orcamentos, eq(schema.orcamentos.id, schema.avaliacoes.orcamentoId))
+    .innerJoin(schema.obras, eq(schema.obras.id, schema.orcamentos.obraId))
+    .where(and(eq(schema.avaliacoes.empresaId, empresaId), filtro?.clienteId ? eq(schema.avaliacoes.clienteId, filtro.clienteId) : undefined))
+    .orderBy(desc(schema.avaliacoes.criadoEm));
+}
+
+/** Todas as indicações, com quem indicou e se a pessoa indicada já pediu orçamento. */
+export function listarIndicacoes(empresaId: string, filtro?: { indicadoPorId?: string; clienteId?: string }) {
+  const indicador = sql<string>`(select ${schema.clientes.nome} from ${schema.clientes} where ${schema.clientes.id} = ${schema.indicacoes.indicadoPorId})`;
+  return db
+    .select({
+      id: schema.indicacoes.id,
+      criadoEm: schema.indicacoes.criadoEm,
+      contatadoEm: schema.indicacoes.contatadoEm,
+      clienteId: schema.clientes.id,
+      nome: schema.clientes.nome,
+      telefone: schema.clientes.telefone,
+      indicadoPorId: schema.indicacoes.indicadoPorId,
+      indicadorNome: indicador,
+      orcamentos: sql<number>`(select count(*)::int from ${schema.orcamentos} where ${schema.orcamentos.clienteId} = ${schema.indicacoes.clienteId})`,
+    })
+    .from(schema.indicacoes)
+    .innerJoin(schema.clientes, eq(schema.clientes.id, schema.indicacoes.clienteId))
+    .where(
+      and(
+        eq(schema.indicacoes.empresaId, empresaId),
+        filtro?.indicadoPorId ? eq(schema.indicacoes.indicadoPorId, filtro.indicadoPorId) : undefined,
+        filtro?.clienteId ? eq(schema.indicacoes.clienteId, filtro.clienteId) : undefined,
+      ),
+    )
+    .orderBy(desc(schema.indicacoes.criadoEm));
+}
