@@ -20,6 +20,7 @@
     "db:semear": "tsx scripts/db-semear.ts",
     "backup": "tsx --env-file-if-exists=.env.local scripts/backup.ts",
     "restaurar": "tsx --env-file-if-exists=.env.local scripts/restaurar.ts",
+    "backup:restaurar": "tsx --env-file-if-exists=.env.local scripts/restaurar-backup.ts",
     "teste:e2e": "tsx --env-file-if-exists=.env.local scripts/teste-e2e.ts"
   },
   "repository": {

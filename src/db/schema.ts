@@ -54,6 +54,8 @@ export const empresas = pgTable('empresas', {
   chavePix: text('chave_pix'),
   /** Link "avaliar no Google" (perfil da empresa no Google), oferecido a quem dá 4 ou 5 estrelas. */
   linkAvaliacaoGoogle: text('link_avaliacao_google'),
+  /** Último "Baixar backup" (cópia guardada fora do Supabase); o Painel lembra depois de 30 dias. */
+  backupBaixadoEm: timestamp('backup_baixado_em', { withTimezone: true }),
   criadoEm: criadoEm(),
 });
 

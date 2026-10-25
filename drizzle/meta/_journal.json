@@ -43,6 +43,13 @@
       "when": 1792818647387,
       "tag": "0005_produtos",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792864987779,
+      "tag": "0006_backup",
+      "breakpoints": true
     }
   ]
 }

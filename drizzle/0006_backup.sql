@@ -1,0 +1,1 @@
+ALTER TABLE "empresas" ADD COLUMN "backup_baixado_em" timestamp with time zone;
